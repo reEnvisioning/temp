@@ -310,7 +310,7 @@ PanelWindow {
             color: root.colors.background
 
             transform: Scale {
-                origin.y: parent.height
+                origin.y: contentWrapper.height
                 origin.x: root.panelWidth / 2
                 xScale: root.widthScaleAnim
             }

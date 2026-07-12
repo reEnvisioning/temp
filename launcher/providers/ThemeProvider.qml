@@ -3,9 +3,8 @@ import Quickshell
 import Quickshell.Io
 import qs.lib
 
-Item {
+QtObject {
     id: root
-    visible: false
 
     readonly property Settings settings: Settings {}
 
@@ -18,7 +17,7 @@ Item {
     Process {
         id: themeLoader
         command: ["bash", "-c",
-            "dir=\"" + settings.themePath() + "/themes\";" +
+            "dir=\"" + settings.themePath + "/themes\";" +
             "[ -d \"$dir\" ] || exit 0;" +
             "for d in \"$dir\"/*/; do" +
             "  [ -d \"$d\" ] || continue;" +

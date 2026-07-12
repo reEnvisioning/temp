@@ -3,9 +3,8 @@ import Quickshell
 import Quickshell.Io
 import "../scripts/fuzzy.js" as Fuzzy
 
-Item {
+QtObject {
     id: root
-    visible: false
 
     property string prefix: "^ "
     property string name: "Share"

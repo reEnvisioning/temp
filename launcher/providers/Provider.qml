@@ -1,8 +1,7 @@
 import QtQuick
 
-Item {
+QtObject {
     id: root
-    visible: false
 
     property string prefix: ""
     property string name: ""
