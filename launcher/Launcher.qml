@@ -34,26 +34,7 @@ PanelWindow {
 
     property list<QtObject> providers: []
 
-    Component.onCompleted: {
-        var list = []
-        function add(key, obj) {
-            if (_settings.providerEnabled(key))
-                list.push(obj)
-        }
-        add("app", appProvCmp.createObject(root))
-        add("shell", shellProvCmp.createObject(root))
-        add("terminal", terminalProvCmp.createObject(root))
-        add("ssh", sshProvCmp.createObject(root))
-        add("theme", themeProvCmp.createObject(root))
-        root._wp = _settings.providerEnabled("wallpaper") ? wallpaperProvCmp.createObject(root) : null
-        if (root._wp) list.push(root._wp)
-        add("system", systemProvCmp.createObject(root))
-        root._sp = _settings.providerEnabled("share") ? shareProvCmp.createObject(root) : null
-        if (root._sp) list.push(root._sp)
-        add("emoji", emojiProvCmp.createObject(root))
-        add("calc", calcProvCmp.createObject(root))
-        root.providers = list
-    }
+    Component.onCompleted: rebuildProviders()
 
     Component { id: appProvCmp; AppProvider {} }
     Component { id: shellProvCmp; ShellProvider {} }
@@ -181,6 +162,29 @@ PanelWindow {
         if (root.activeProvider && root.queryText)
             return root.emptyListHeight
         return 0
+    }
+
+    function rebuildProviders() {
+        for (var i = 0; i < root.providers.length; i++)
+            root.providers[i].destroy()
+        var list = []
+        function add(key, obj) {
+            if (_settings.providerEnabled(key))
+                list.push(obj)
+        }
+        add("app", appProvCmp.createObject(root))
+        add("shell", shellProvCmp.createObject(root))
+        add("terminal", terminalProvCmp.createObject(root))
+        add("ssh", sshProvCmp.createObject(root))
+        add("theme", themeProvCmp.createObject(root))
+        root._wp = _settings.providerEnabled("wallpaper") ? wallpaperProvCmp.createObject(root) : null
+        if (root._wp) list.push(root._wp)
+        add("system", systemProvCmp.createObject(root))
+        root._sp = _settings.providerEnabled("share") ? shareProvCmp.createObject(root) : null
+        if (root._sp) list.push(root._sp)
+        add("emoji", emojiProvCmp.createObject(root))
+        add("calc", calcProvCmp.createObject(root))
+        root.providers = list
     }
 
     function open() {
@@ -492,6 +496,11 @@ PanelWindow {
                 child.selected = (i === root.currentIndex)
         }
         ensureVisible()
+    }
+
+    Connections {
+        target: root._settings
+        function onLauncherProvidersChanged() { rebuildProviders() }
     }
 
     Connections {
