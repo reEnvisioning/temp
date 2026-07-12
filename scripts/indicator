@@ -1,0 +1,4 @@
+#!/bin/sh
+# Usage: indicator <AppName> <Summary> [Body]
+# Generic wrapper for dedup-capable system notifications.
+notify-send --app-name="$1" --expire-time=2000 "$2" "${3:-}"

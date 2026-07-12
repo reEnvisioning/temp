@@ -1,0 +1,52 @@
+#!/bin/sh
+# Usage: idle-toggle on|off|toggle
+#
+# Toggles a swayidle-based idle inhibitor. The screen-lock and monitor-power
+# commands are intentionally generic: only the tools that exist on the system
+# are used. No compositor (niri/hyprland/sway) is assumed — monitor power and
+# lock commands are best-effort and skipped when their binaries are absent.
+command -v swayidle >/dev/null 2>&1 || exit 0
+command -v indicator >/dev/null 2>&1 || exit 0
+command -v state >/dev/null 2>&1 || exit 0
+
+CMD="${1:-toggle}"
+
+# Best-effort optional helpers (no error if missing).
+lock_cmd=""
+mon_off_cmd=""
+mon_on_cmd=""
+command -v swaylock >/dev/null 2>&1 && lock_cmd="swaylock -f"
+# Compositor-agnostic monitor power is not standardized; left empty by default.
+# Users can symlink/extend this script for their compositor if desired.
+
+build_idle() {
+    sway-audio-idle-inhibit 2>/dev/null &
+    swayidle -w \
+        timeout 300 "${lock_cmd:-true}" \
+        before-sleep "${lock_cmd:-true}" &
+    disown
+}
+
+case "$CMD" in
+    on)
+        if ! pgrep -x swayidle >/dev/null; then
+            build_idle
+        fi
+        text="Enabled" ;;
+    off)
+        pkill -x sway-audio-idle-inhibit 2>/dev/null || true
+        pkill -x swayidle 2>/dev/null || true
+        text="Disabled" ;;
+    *)
+        if pgrep -x swayidle >/dev/null; then
+            pkill -x sway-audio-idle-inhibit 2>/dev/null || true
+            pkill -x swayidle 2>/dev/null || true
+            text="Disabled"
+        else
+            build_idle
+            text="Enabled"
+        fi ;;
+esac
+
+indicator "Idle Indicator" "Idle Inhibit" "$text"
+state set idle-inhibit "$(echo "$text" | tr '[:upper:]' '[:lower:]')"

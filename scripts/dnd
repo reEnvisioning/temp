@@ -1,0 +1,9 @@
+#!/bin/sh
+# Usage: dnd on|off|toggle
+CMD="${1:-toggle}"
+case "$CMD" in
+    on)  shell dnd-on ;;
+    off) shell dnd-off ;;
+    *)   shell dnd ;;
+esac
+indicator "DnD Indicator" "Do Not Disturb" "Toggled"

@@ -1,0 +1,17 @@
+#!/bin/sh
+# Usage: state get <key>   -> prints value or empty
+#        state set <key> <value>   -> upserts
+# State is stored as individual files under ~/.config/reEnvisioning/state/<key>
+
+DIR="$HOME/.config/reEnvisioning/state"
+CMD="$1"; KEY="$2"; VALUE="$3"
+
+case "$CMD" in
+    get)
+        [ -f "$DIR/$KEY" ] || exit 0
+        cat "$DIR/$KEY" ;;
+    set)
+        [ -f "$DIR" ] && rm -f "$DIR"
+        mkdir -p "$DIR"
+        printf '%s' "$VALUE" > "$DIR/$KEY" ;;
+esac

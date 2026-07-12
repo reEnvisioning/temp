@@ -1,0 +1,40 @@
+#!/bin/sh
+# Usage: volume up|down|toggle|set <value>
+command -v wpctl >/dev/null 2>&1 || exit 0
+command -v indicator >/dev/null 2>&1 || exit 0
+
+CMD="${1:-up}"
+STATE_FILE="$HOME/.config/reEnvisioning/state"
+
+case "$CMD" in
+    up)   wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+ ;;
+    down) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%- ;;
+    toggle)
+        RAW=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+        pct=$(echo "$RAW" | awk '{printf "%.0f", $2 * 100}')
+        if [ "$pct" -eq 0 ]; then
+            prev=$(sed -n 's/^volume-prev=//p' "$STATE_FILE" 2>/dev/null | tail -1)
+            prev="${prev:-50}"
+            wpctl set-volume @DEFAULT_AUDIO_SINK@ "${prev}%"
+        else
+            mkdir -p "$(dirname "$STATE_FILE")"
+            if grep -q '^volume-prev=' "$STATE_FILE" 2>/dev/null; then
+                sed -i "s|^volume-prev=.*|volume-prev=$pct|" "$STATE_FILE"
+            else
+                echo "volume-prev=$pct" >> "$STATE_FILE"
+            fi
+            wpctl set-volume @DEFAULT_AUDIO_SINK@ 0
+        fi ;;
+    set) wpctl set-volume @DEFAULT_AUDIO_SINK@ "${2:-50}%" ;;
+esac
+
+RAW=$(wpctl get-volume @DEFAULT_AUDIO_SINK@)
+case "$RAW" in
+    MUTED*)
+        text="Muted" ;;
+    *)
+        pct=$(echo "$RAW" | awk '{printf "%.0f", $2 * 100}')
+        text="${pct}%" ;;
+esac
+
+indicator "Volume Indicator" "Volume" "$text"

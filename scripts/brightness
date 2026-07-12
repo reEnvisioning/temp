@@ -1,0 +1,18 @@
+#!/bin/sh
+# Usage: brightness up|down|set <value>
+command -v brightnessctl >/dev/null 2>&1 || exit 0
+command -v indicator >/dev/null 2>&1 || exit 0
+
+CMD="${1:-up}"
+
+case "$CMD" in
+    up)   brightnessctl set 5%+ ;;
+    down) brightnessctl set 5%- ;;
+    set)  brightnessctl set "${2:-50}%" ;;
+esac
+
+pct=$(brightnessctl g)
+max=$(brightnessctl m)
+pct=$((pct * 100 / max))
+
+indicator "Brightness Indicator" "Brightness" "${pct}%"

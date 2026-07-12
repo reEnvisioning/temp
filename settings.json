@@ -1,0 +1,79 @@
+{
+  "theme": {
+    "path": "~/.config/reEnvisioning"
+  },
+  "data": {
+    "path": "~/.config/reEnvisioning/reShell"
+  },
+  "ui": {
+    "scale": 1
+  },
+  "defaults": {
+    "colors": {
+      "background": "#080808",
+      "text": "#C0C0C0",
+      "accent": "#0E0E0E",
+      "accent_light": "#121212",
+      "accent_dark": "#000000",
+      "subtext0": "#A8A8A8",
+      "subtext1": "#B0B0B0",
+      "highlighted": "#363636",
+      "borderInactive": "#161616",
+      "borderFocused": "#1C1C1C",
+      "surface2": "#505050",
+      "overlay1": "#2C2C2C",
+      "overlay2": "#1E1E1E",
+      "backgroundAccent": "#1A1A1A",
+      "crust": "#000000",
+      "red": "#666666",
+      "green": "#868686",
+      "yellow": "#9A9A9A",
+      "blue": "#6A6A6A",
+      "magenta": "#929292",
+      "cyan": "#8A8A8A",
+      "mauve": "#767676",
+      "lavender": "#7A7A7A",
+      "pink": "#8E8E8E",
+      "flamingo": "#969696",
+      "maroon": "#727272",
+      "peach": "#7E7E7E",
+      "sky": "#828282",
+      "sapphire": "#6E6E6E",
+      "rosewater": "#A0A0A0"
+    },
+    "font": {
+      "family": "Monospace",
+      "size": 10
+    }
+  },
+  "modules": {
+    "bar": true,
+    "notifications": true,
+    "clipboard": true,
+    "launcher": true
+  },
+  "launcherProviders": {
+    "app": true,
+    "shell": true,
+    "terminal": true,
+    "ssh": true,
+    "theme": true,
+    "wallpaper": true,
+    "system": true,
+    "share": true,
+    "emoji": true,
+    "calc": true
+  },
+  "providerPrefixes": {
+    "app": "",
+    "shell": "\u003e ",
+    "terminal": "\u003e\u003e ",
+    "ssh": "ssh ",
+    "theme": "#",
+    "wallpaper": "$",
+    "system": "@",
+    "share": "^",
+    "emoji": ": ",
+    "calc": "= "
+  }
+}

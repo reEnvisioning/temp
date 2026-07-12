@@ -1,0 +1,24 @@
+#!/bin/sh
+# shell — IPC CLI for the quickshell panel
+# Relays commands to the running quickshell instance via qs msg.
+set -eu
+
+CMD="${1:-}"; [ $# -gt 0 ] && shift
+QS_MSG="${QS_MSG:-qs msg}"
+
+case "$CMD" in
+    launcher) exec $QS_MSG panel toggleLauncher ;;
+    clip)     exec $QS_MSG panel toggleClipboard ;;
+    dnd)      exec $QS_MSG panel toggleDnd ;;
+    dnd-on)   exec $QS_MSG panel toggleDnd 1 ;;
+    dnd-off)  exec $QS_MSG panel toggleDnd 0 ;;
+    dismiss)  exec $QS_MSG panel dismissNotifications ;;
+    tab)      exec $QS_MSG panel setTab "${1:-0}" ;;
+    startup)  exec $QS_MSG panel showStartupNotif "$@" ;;
+    reload)   exec $QS_MSG panel configReloaded ;;
+    *)
+        echo "Usage: shell <command> [args]" >&2
+        echo "Commands: launcher clip dnd dnd-on dnd-off dismiss tab startup reload" >&2
+        exit 1
+        ;;
+esac
