@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import "../lib"
+import qs.lib
 
 Item {
     id: root

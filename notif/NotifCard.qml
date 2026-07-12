@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Notifications
-import "../lib"
+import qs.lib
 
 Item {
     id: root

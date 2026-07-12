@@ -2,7 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "../lib"
+import qs.lib
 import "providers"
 
 PanelWindow {
@@ -27,7 +27,7 @@ PanelWindow {
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
     // wallpaper, system, share, emoji, calc).
-    readonly property Lib.Settings _settings: Lib.Settings {}
+    readonly property Settings _settings: Settings {}
 
     property var _wp: null
     property var _sp: null

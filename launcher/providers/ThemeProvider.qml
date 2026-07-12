@@ -1,13 +1,13 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import "../../lib" as Lib
+import qs.lib
 
 Item {
     id: root
     visible: false
 
-    readonly property Lib.Settings settings: Lib.Settings {}
+    readonly property Settings settings: Settings {}
 
     property string prefix: "# "
     property string name: "Theme"

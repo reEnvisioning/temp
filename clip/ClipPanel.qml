@@ -4,7 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
-import "../lib"
+import qs.lib
 
 PanelWindow {
     id: root

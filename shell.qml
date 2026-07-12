@@ -4,7 +4,7 @@
 import Quickshell
 import QtQuick
 import Quickshell.Io
-import "lib"
+import qs.lib
 import "bar"
 import "notif"
 import "clip"

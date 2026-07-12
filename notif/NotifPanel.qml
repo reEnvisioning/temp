@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Io
 import Quickshell.Services.Notifications
-import "../lib"
+import qs.lib
 
 PanelWindow {
     id: root

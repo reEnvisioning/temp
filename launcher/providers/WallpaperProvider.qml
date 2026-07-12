@@ -2,13 +2,13 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../scripts/fuzzy.js" as Fuzzy
-import "../../lib" as Lib
+import qs.lib
 
 Item {
     id: root
     visible: false
 
-    readonly property Lib.Settings settings: Lib.Settings {}
+    readonly property Settings settings: Settings {}
 
     readonly property string wpDir: settings.dataFile("wallpapers")
 
