@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import "../lib" as Lib
+import "../lib"
 
 Item {
     id: root
@@ -13,7 +13,7 @@ Item {
     property string hostName: ""
     property string timeString: ""
     property string dateString: ""
-    readonly property Lib.Settings settings: Lib.Settings {}
+    readonly property Settings settings: Settings {}
     property int avatarRefreshCounter: 0
     property string batteryPct: "--"
     property string batteryStatus: ""
