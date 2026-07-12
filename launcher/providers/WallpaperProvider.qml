@@ -163,8 +163,8 @@ Item {
         deleteProc.command = ["bash", "-c",
             "THEME=$(state get current-theme 2>/dev/null || true);" +
             "if [ -z \"$THEME\" ]; then exit 0; fi;" +
-            "if [ -f \"\" + settings.themeDir("$THEME") + \"\" ]; then" +
-            "  THEME_FILE=\"\" + settings.themeDir("$THEME") + \"\";" +
+            "if [ -f \"" + settings.themeDir("$THEME") + "\" ]; then" +
+            "  THEME_FILE=\"" + settings.themeDir("$THEME") + "\";" +
             "else exit 0; fi;" +
             "CURRENT_IDX=$(state get wallpaper-idx:$THEME 2>/dev/null || echo 0);" +
             "CURRENT_PATH=$(jq -r \".wallpapers[$CURRENT_IDX] // \\\"\\\"\" \"$THEME_FILE\");" +
@@ -188,16 +188,16 @@ Item {
         deleteProc.command = ["bash", "-c",
             "THEME=$(state get current-theme 2>/dev/null || true);" +
             "if [ -z \"$THEME\" ]; then exit 0; fi;" +
-            "if [ -f \"\" + settings.themeDir("$THEME") + \"\" ]; then" +
-            "  THEME_FILE=\"\" + settings.themeDir("$THEME") + \"\";" +
+            "if [ -f \"" + settings.themeDir("$THEME") + "\" ]; then" +
+            "  THEME_FILE=\"" + settings.themeDir("$THEME") + "\";" +
             "else exit 0; fi;" +
-            "PREF=\"\" + root.wpDir + \"/\";" +
+            "PREF=\"" + root.wpDir + "/\";" +
             "CURRENT_IDX=$(state get wallpaper-idx:$THEME 2>/dev/null || echo 0);" +
             "CURRENT_PATH=$(jq -r \".wallpapers[$CURRENT_IDX] // \\\"\\\"\" \"$THEME_FILE\");" +
             "jq --arg pref \"$PREF\" 'del(.wallpapers[] | select(. | startswith($pref)))' " +
             "  \"$THEME_FILE\" > \"${THEME_FILE}.tmp\" && " +
             "mv \"${THEME_FILE}.tmp\" \"$THEME_FILE\";" +
-            "rm -rf \"\" + root.wpDir + \"/\";" +
+            "rm -rf \"" + root.wpDir + "/\";" +
             "NEW_COUNT=$(jq '.wallpapers | length' \"$THEME_FILE\");" +
             "if [ \"$NEW_COUNT\" -eq 0 ]; then exit 0; fi;" +
             "if [[ \"$CURRENT_PATH\" == \"$PREF\"* ]]; then" +
@@ -222,11 +222,11 @@ Item {
         addProc.command = ["bash", "-c",
             "THEME=$(state get current-theme 2>/dev/null || true);" +
             "if [ -z \"$THEME\" ]; then exit 0; fi;" +
-            "mkdir -p \"\" + root.wpDir + \"\";" +
-            "cp \"$1\" \"\" + root.wpDir + \"/\";" +
-            "NEW_PATH=\"\" + root.wpDir + \"/$(basename \"$1\")\";" +
-            "if [ -f \"\" + settings.themeDir("$THEME") + \"\" ]; then" +
-            "  THEME_FILE=\"\" + settings.themeDir("$THEME") + \"\";" +
+            "mkdir -p \"" + root.wpDir + "\";" +
+            "cp \"$1\" \"" + root.wpDir + "/\";" +
+            "NEW_PATH=\"" + root.wpDir + "/$(basename \"$1\")\";" +
+            "if [ -f \"" + settings.themeDir("$THEME") + "\" ]; then" +
+            "  THEME_FILE=\"" + settings.themeDir("$THEME") + "\";" +
             "else exit 0; fi;" +
             "jq --arg new \"$NEW_PATH\" '.wallpapers += [$new]' \"$THEME_FILE\" > \"${THEME_FILE}.tmp\" && " +
             "mv \"${THEME_FILE}.tmp\" \"$THEME_FILE\"",
@@ -254,7 +254,7 @@ Item {
                 "if [ -z \"$THEME\" ]; then exit 0; fi;" +
                 "pkill swaybg 2>/dev/null || true;" +
                 "nohup swaybg -i \"$1\" -m fill >/dev/null 2>&1 & disown;" +
-                "THEME_FILE=\"\" + settings.themeDir("$THEME") + \"\";" +
+                "THEME_FILE=\"" + settings.themeDir("$THEME") + "\";" +
                 "if [ ! -f \"$THEME_FILE\" ]; then exit 0; fi;" +
                 "IDX=$(jq -r --arg p \"$1\" '.wallpapers | map(. == $p) | index(true)' \"$THEME_FILE\");" +
                 "if [ \"$IDX\" != \"null\" ] && [ -n \"$IDX\" ]; then" +
