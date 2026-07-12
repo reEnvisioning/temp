@@ -9,9 +9,9 @@ import qs.lib
 PanelWindow {
     id: root
 
-    required property var colors
-    required property var clipMon
-    required property real uiScale
+    property var colors: ({})
+    property var clipMon: null
+    property real uiScale: 1
 
     property bool showPanel: false
     property int currentIndex: 0

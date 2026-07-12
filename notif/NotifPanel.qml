@@ -8,9 +8,9 @@ import qs.lib
 PanelWindow {
     id: root
 
-    required property var colors
+    property var colors: ({})
 
-    required property real uiScale
+    property real uiScale: 1
 
     function activeCount() {
         var c = 0

@@ -8,8 +8,8 @@ import "providers"
 PanelWindow {
     id: root
 
-    required property var colors
-    required property real uiScale
+    property var colors: ({})
+    property real uiScale: 1
 
     property real panelWidth: Math.round(520 * root.uiScale)
     property real inputHeight: Math.round(40 * root.uiScale)

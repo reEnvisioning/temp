@@ -7,9 +7,9 @@ import qs.lib
 PanelWindow {
     id: root
 
-    required property var colors
+    property var colors: ({})
 
-    required property real uiScale
+    property real uiScale: 1
 
     property real collapsedHeight: Math.round(2 * root.uiScale)
     property real expandedHeight: Math.round(180 * root.uiScale)
