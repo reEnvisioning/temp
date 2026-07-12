@@ -5,9 +5,7 @@
   "data": {
     "path": "~/.config/reEnvisioning/reShell"
   },
-  "ui": {
-    "scale": 1
-  },
+  "uiScale": 1,
   "defaults": {
     "colors": {
       "background": "#080808",
