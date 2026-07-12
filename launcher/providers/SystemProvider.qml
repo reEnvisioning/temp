@@ -1,8 +1,9 @@
 import QtQuick
 import Quickshell
 
-QtObject {
+Item {
     id: root
+    visible: false
 
     property string prefix: "@ "
     property string name: "System"

@@ -3,8 +3,9 @@ import Quickshell
 import Quickshell.Io
 import qs.lib
 
-QtObject {
+Item {
     id: root
+    visible: false
 
     readonly property Settings settings: Settings {}
 

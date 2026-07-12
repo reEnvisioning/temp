@@ -4,8 +4,9 @@ import Quickshell.Io
 import "../scripts/fuzzy.js" as Fuzzy
 import qs.lib
 
-QtObject {
+Item {
     id: root
+    visible: false
 
     readonly property Settings settings: Settings {}
 
