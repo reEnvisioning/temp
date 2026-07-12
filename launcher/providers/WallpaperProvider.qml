@@ -91,7 +91,7 @@ Item {
                     Quickshell.execDetached(["bash", "-c",
                                     "THEME=$(state get current-theme 2>/dev/null || true);" +
                         "if [ -z \"$THEME\" ]; then exit 0; fi;" +
-                        "THEME_FILE=\"\" + settings.themeDir("$THEME") + \"\";" +
+                        "THEME_FILE=\"" + settings.themeDir("$THEME") + "\";" +
                         "if [ ! -f \"$THEME_FILE\" ]; then exit 0; fi;" +
                         "WALLPAPER=$(jq -r '.wallpapers[-1]' \"$THEME_FILE\");" +
                         "if [ -f \"$WALLPAPER\" ]; then" +
