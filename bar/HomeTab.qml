@@ -126,7 +126,7 @@ Item {
                 Layout.rowSpan: 2
                 Layout.preferredWidth: Math.round(300)
                 radius: Math.round(8)
-                color: root.colors.borderInactive
+                color: root.colors.element_background
                 Behavior on color { CAnim {} }
 
                 Rectangle {
@@ -158,7 +158,7 @@ Item {
                 Layout.preferredWidth: Math.round(200)
                 Layout.preferredHeight: Math.round(60)
                 radius: Math.round(8)
-                color: root.colors.borderInactive
+                color: root.colors.element_background
                 Behavior on color { CAnim {} }
 
                 ColumnLayout {
@@ -191,7 +191,7 @@ Item {
                 Layout.preferredWidth: Math.round(200)
                 Layout.preferredHeight: Math.round(30)
                 radius: Math.round(8)
-                color: root.colors.borderInactive
+                color: root.colors.element_background
                 Behavior on color { CAnim {} }
 
                 RowLayout {

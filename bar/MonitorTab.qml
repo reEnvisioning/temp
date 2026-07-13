@@ -97,7 +97,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.round(56)
             radius: Math.round(8)
-            color: root.colors.borderInactive
+            color: root.colors.element_background
             Behavior on color { CAnim {} }
 
             ColumnLayout {
@@ -133,7 +133,7 @@ Item {
             Layout.fillWidth: true
             Layout.preferredHeight: Math.round(56)
             radius: Math.round(8)
-            color: root.colors.borderInactive
+            color: root.colors.element_background
             Behavior on color { CAnim {} }
 
             ColumnLayout {
@@ -170,7 +170,7 @@ Item {
             Layout.preferredHeight: Math.round(56)
             Layout.columnSpan: 2
             radius: Math.round(8)
-            color: root.colors.borderInactive
+            color: root.colors.element_background
             Behavior on color { CAnim {} }
 
             ColumnLayout {
