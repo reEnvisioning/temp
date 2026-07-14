@@ -454,10 +454,7 @@ PanelWindow {
                         var prov = root.activeProvider
                         if (typeof prov.altActivate !== "function") { return }
                         prov.altActivate(root.results[root.currentIndex])
-                        if (prov.closeOnActivate !== false)
-                            close()
-                        else
-                            inputField.text = prov.prefix
+                        root.processInput(inputField.text)
                         event.accepted = true
                     } else if (event.key === Qt.Key_Escape) {
                         if (root.activeProvider || root.results.length > 0 || inputField.text !== "") {
