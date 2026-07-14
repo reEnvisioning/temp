@@ -8,6 +8,7 @@ Item {
     property string prefix: "% "
     property string name: "Clipboard"
     property string placeholderText: "Search clipboard..."
+    property bool closeOnActivate: true
 
     property var clipMon: null
     property int refreshKey: 0
@@ -19,13 +20,21 @@ Item {
         }
     }
 
+    function _findIndex(content) {
+        if (!root.clipMon) return -1
+        for (var i = 0; i < root.clipMon.entries.length; i++) {
+            if (root.clipMon.entries[i].content === content) return i
+        }
+        return -1
+    }
+
     function query(text) {
         if (!root.clipMon || !root.clipMon.entries) return []
 
         var entries = root.clipMon.entries
         if (!text || !text.trim()) {
-            return entries.map(function(e, i) {
-                return { entry: e, _index: i }
+            return entries.map(function(e) {
+                return { entry: e }
             })
         }
 
@@ -34,7 +43,7 @@ Item {
         for (var i = 0; i < entries.length; i++) {
             var c = entries[i].content
             if (c && c.toLowerCase().indexOf(lower) !== -1)
-                results.push({ entry: entries[i], _index: i })
+                results.push({ entry: entries[i] })
         }
         return results
     }
@@ -48,17 +57,20 @@ Item {
 
     function activate(result) {
         if (!result || !root.clipMon) return
-        root.clipMon.copyAt(result._index)
+        var idx = root._findIndex(result.entry.content)
+        if (idx !== -1) root.clipMon.copyAt(idx)
     }
 
     function altActivate(result) {
         if (!result || !root.clipMon) return
-        root.clipMon.togglePin(result._index)
+        var idx = root._findIndex(result.entry.content)
+        if (idx !== -1) root.clipMon.togglePin(idx)
     }
 
     function remove(result) {
         if (!result || !root.clipMon) return
-        root.clipMon.removeAt(result._index)
+        var idx = root._findIndex(result.entry.content)
+        if (idx !== -1) root.clipMon.removeAt(idx)
     }
 
     function removeAll() {

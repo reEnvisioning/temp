@@ -137,7 +137,7 @@ Item {
                     clip: true
                     color: "transparent"
                     border.width: 2
-                    border.color: root.colors.accent
+                    border.color: root.colors.border
                     Behavior on border.color { CAnim {} }
 
                     Image {

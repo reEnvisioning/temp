@@ -177,6 +177,8 @@ PanelWindow {
     }
 
     function rebuildProviders() {
+        root.activeProvider = null
+        root.results = []
         for (var i = 0; i < root.providers.length; i++)
             root.providers[i].destroy()
         var list = []

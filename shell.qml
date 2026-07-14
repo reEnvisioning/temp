@@ -196,8 +196,15 @@ ShellRoot {
         }
         function toggleClipboard() {
             if (!launcherLoader.item) return
-            launcherLoader.item.openWithPrefix("% ")
-            launcherOpen = true
+            if (launcherLoader.item.isOpen &&
+                launcherLoader.item.activeProvider &&
+                launcherLoader.item.activeProvider.name === "Clipboard") {
+                launcherLoader.item.close()
+                launcherOpen = false
+            } else {
+                launcherLoader.item.openWithPrefix("% ")
+                launcherOpen = true
+            }
         }
         function setTab(index: string) {
             activeTab = parseInt(index)
