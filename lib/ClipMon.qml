@@ -47,7 +47,7 @@ Item {
     // Read text clipboard from temp file (called by IpcHandler.pushTextClip)
     function readTextClip() {
         readerProcess.command = ["sh", "-c",
-            "cat \"" + root.tmpDir + "/clip-text\" 2>/dev/null || echo ''"]
+            "wl-paste -t text/plain 2>/dev/null || echo ''"]
         readerProcess.running = false
         readerProcess.running = true
     }
