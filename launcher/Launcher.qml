@@ -26,11 +26,13 @@ PanelWindow {
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
-    // wallpaper, system, share, emoji, calc).
+    // wallpaper, system, share, emoji, calc, clipboard).
     readonly property Settings _settings: Settings {}
 
     property var _wp: null
     property var _sp: null
+    property var _cp: null
+    property var clipMon: null
 
     property list<QtObject> providers: []
 
@@ -46,6 +48,7 @@ PanelWindow {
     Component { id: shareProvCmp; ShareProvider {} }
     Component { id: emojiProvCmp; EmojiProvider {} }
     Component { id: calcProvCmp; CalcProvider {} }
+    Component { id: clipProvCmp; ClipProvider {} }
 
     Connections {
         target: root._wp
@@ -64,6 +67,15 @@ PanelWindow {
         ignoreUnknownSignals: true
         function onRefreshKeyChanged() {
             if (root.activeProvider === root._sp)
+                root.processInput(inputField.text)
+        }
+    }
+
+    Connections {
+        target: root._cp
+        ignoreUnknownSignals: true
+        function onRefreshKeyChanged() {
+            if (root.activeProvider === root._cp)
                 root.processInput(inputField.text)
         }
     }
@@ -184,6 +196,11 @@ PanelWindow {
         if (root._sp) list.push(root._sp)
         add("emoji", emojiProvCmp.createObject(root))
         add("calc", calcProvCmp.createObject(root))
+        root._cp = _settings.providerEnabled("clipboard") ? clipProvCmp.createObject(root) : null
+        if (root._cp) {
+            root._cp.clipMon = Qt.binding(function() { return root.clipMon })
+            list.push(root._cp)
+        }
         root.providers = list
     }
 
@@ -191,6 +208,14 @@ PanelWindow {
         if (!root.isOpen)
             root.isOpen = true
         resetState()
+        Qt.callLater(function() { inputField.forceActiveFocus() })
+    }
+
+    function openWithPrefix(pre) {
+        if (!root.isOpen)
+            root.isOpen = true
+        resetState()
+        inputField.text = pre
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
 

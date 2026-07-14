@@ -262,7 +262,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.maximumHeight: Math.round(180 * root.uiScale)
                 radius: Math.round(8 * root.uiScale)
-                color: root.colors.surface2
+                color: root.colors.surface
                 clip: true
                 visible: notifImg.status === Image.Ready
 
@@ -290,7 +290,7 @@ Item {
                         id: actionBtn
                         height: Math.round(26 * root.uiScale)
                         radius: Math.round(8 * root.uiScale)
-                        color: actionBtnMouse.containsMouse ? root.colors.highlighted : root.colors.surface2
+                        color: actionBtnMouse.containsMouse ? root.colors.highlighted : root.colors.surface
                         implicitWidth: actionLabel.width + Math.round(14 * root.uiScale)
 
                         Behavior on color { CAnim {} }

@@ -7,7 +7,6 @@ import Quickshell.Io
 import qs.lib
 import "bar"
 import "notif"
-import "clip"
 import "launcher"
 
 ShellRoot {
@@ -75,21 +74,6 @@ ShellRoot {
     }
 
     Loader {
-        id: clipPanelLoader
-        active: settings.moduleEnabled("clipboard")
-        sourceComponent: clipPanelComp
-        onLoaded: {
-            item.colors = colors
-            item.clipMon = Qt.binding(function() { return clipMonLoader.item })
-            item.uiScale = Qt.binding(function() { return root.uiScale })
-        }
-    }
-    Component {
-        id: clipPanelComp
-        ClipPanel {}
-    }
-
-    Loader {
         id: barLoader
         active: settings.moduleEnabled("bar")
         sourceComponent: barComp
@@ -128,6 +112,7 @@ ShellRoot {
         onLoaded: {
             item.colors = colors
             item.uiScale = Qt.binding(function() { return root.uiScale })
+            item.clipMon = Qt.binding(function() { return clipMonLoader.item })
         }
     }
     Component {
@@ -207,14 +192,12 @@ ShellRoot {
             } else {
                 launcherLoader.item.open()
                 launcherOpen = true
-                if (clipPanelLoader.item) clipPanelLoader.item.showPanel = false
             }
         }
         function toggleClipboard() {
-            if (!clipPanelLoader.item) return
-            clipPanelLoader.item.showPanel = !clipPanelLoader.item.showPanel
-            if (clipPanelLoader.item.showPanel && launcherLoader.item)
-                launcherLoader.item.close()
+            if (!launcherLoader.item) return
+            launcherLoader.item.openWithPrefix("% ")
+            launcherOpen = true
         }
         function setTab(index: string) {
             activeTab = parseInt(index)

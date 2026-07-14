@@ -366,17 +366,17 @@ Item {
                     height: Math.round(36 * uiScale)
                     radius: Math.round(4 * uiScale)
                     clip: true
-                    color: modelData && modelData.isAdd === true ? colors.surface0 || "#333" : "transparent"
+                    color: modelData && modelData.isAdd === true ? colors.surface : "transparent"
 
                     Rectangle {
                         anchors.fill: parent
-                        color: colors.surface0 || "#333"
+                        color: colors.surface
                         visible: modelData && modelData.isAdd !== true
 
                         Text {
                             anchors.centerIn: parent
                             text: modelData ? modelData.name.charAt(0).toUpperCase() : ""
-                            color: colors.subtext0 || "#888"
+                            color: colors.subtext0
                             font.pointSize: 14
                             font.weight: Font.Bold
                         }

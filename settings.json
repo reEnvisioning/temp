@@ -10,6 +10,7 @@
     "colors": {
       "background": "#FFF5F5",
       "text": "#2D2D2D",
+      "cursor": "#F0CECE",
       "accent": "#F0CECE",
       "accent_light": "#EBBDBD",
       "accent_dark": "#F5DCDC",
@@ -18,7 +19,7 @@
       "highlighted": "#F0CECE",
       "element_background": "#F0CECE",
       "border": "#E8C0C0",
-      "surface2": "#DEBCBC",
+      "surface": "#DEBCBC",
       "overlay1": "#EDD0D0",
       "overlay2": "#F2DDDD",
       "backgroundAccent": "#F5E0E0",
@@ -60,7 +61,8 @@
     "system": true,
     "share": true,
     "emoji": true,
-    "calc": true
+    "calc": true,
+    "clipboard": true
   },
   "providerPrefixes": {
     "app": "",
@@ -72,6 +74,7 @@
     "system": "@",
     "share": "^",
     "emoji": ": ",
-    "calc": "= "
+    "calc": "= ",
+    "clipboard": "% "
   }
 }
