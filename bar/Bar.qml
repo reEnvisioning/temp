@@ -12,7 +12,7 @@ PanelWindow {
     property real uiScale: 1
 
     property real collapsedHeight: Math.round(2 * root.uiScale)
-    property real expandedHeight: Math.round(180 * root.uiScale)
+    property real expandedHeight: Math.round(200 * root.uiScale)
     property real panelWidth: Math.round(520 * root.uiScale)
     property bool isExpanded: false
     property int activeTab: 0
