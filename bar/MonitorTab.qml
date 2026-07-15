@@ -16,6 +16,7 @@ Item {
     property string memUsed: ""
     property string memTotal: ""
     property real cpuPct: 0
+    property int cpuCores: 1
     property real gpuPct: 0
     property string gpuMemUsed: ""
     property string gpuMemTotal: ""
@@ -35,9 +36,11 @@ Item {
     readonly property real gap: Math.round(6)
     readonly property real compactW: root.width > gap ? (root.width - gap) / 2 : 0
     readonly property real compactH: Math.round(56)
+    readonly property real offsetX: root.width > compactW * 2 + gap ? (root.width - compactW * 2 - gap) / 2 : 0
+    readonly property real offsetY: root.height > compactH * 2 + gap ? (root.height - compactH * 2 - gap) / 2 : 0
 
-    function cardX(col: real): real { return col * (compactW + gap) }
-    function cardY(row: real): real { return row * (compactH + gap) }
+    function cardX(col: real): real { return offsetX + col * (compactW + gap) }
+    function cardY(row: real): real { return offsetY + row * (compactH + gap) }
 
     function parseCpu(line: string): void {
         const parts = line.trim().split(/\s+/)
@@ -88,11 +91,18 @@ Item {
     function parsePartitions(text: string): void {
         const lines = text.trim().split("\n")
         const parts = []
-        for (let i = 1; i < lines.length; i++) {
-            const p = lines[i].split(",")
-            if (p.length >= 5 && p[4] === "part") {
-                const sizeGB = (Number(p[1]) / 1073741824).toFixed(0)
-                parts.push({ name: p[0], size: sizeGB + "G", fstype: p[2], mount: p[3] || "\u2014" })
+        for (const line of lines) {
+            const nameM = line.match(/NAME="([^"]*)"/)
+            const sizeM = line.match(/SIZE="([^"]*)"/)
+            const fsM = line.match(/FSTYPE="([^"]*)"/)
+            const mountM = line.match(/MOUNTPOINT="([^"]*)"/)
+            const typeM = line.match(/TYPE="([^"]*)"/)
+            const type = typeM ? typeM[1] : ""
+            const name = nameM ? nameM[1] : ""
+            const size = sizeM ? sizeM[1] : ""
+            if (type === "part" && name && size) {
+                const sizeGB = (Number(size) / 1073741824).toFixed(0)
+                parts.push({ name: name, size: sizeGB + "G", fstype: fsM ? fsM[1] || "\u2014" : "\u2014", mount: mountM ? mountM[1] || "\u2014" : "\u2014" })
             }
         }
         root.diskPartitions = parts
@@ -104,10 +114,21 @@ Item {
         for (const line of lines) {
             const p = line.trim().split(/\s+/)
             if (p.length < 11) continue
-            const pct = sortBy === "cpu" ? parseFloat(p[2]) : parseFloat(p[3])
-            if (!isNaN(pct) && pct > 0) {
-                const name = p[10].length > 14 ? p[10].substring(0, 14) + "\u2026" : p[10]
-                apps.push({ name: name, pct: pct.toFixed(1) + "%" })
+            const rawName = p[10]
+            const name = rawName.length > 18 ? rawName.substring(0, 18) + "\u2026" : rawName
+            if (sortBy === "cpu") {
+                const rawPct = parseFloat(p[2])
+                if (!isNaN(rawPct) && rawPct > 0) {
+                    const pct = (rawPct / root.cpuCores).toFixed(1)
+                    apps.push({ name: name, pct: pct + "%" })
+                }
+            } else {
+                const rssKB = parseInt(p[5])
+                if (!isNaN(rssKB) && rssKB > 0) {
+                    const gb = rssKB / 1048576
+                    const display = gb >= 1 ? gb.toFixed(1) + "G" : (rssKB / 1024).toFixed(0) + "M"
+                    apps.push({ name: name, pct: display })
+                }
             }
         }
         return apps.slice(0, 3)
@@ -117,11 +138,15 @@ Item {
         const lines = text.trim().split("\n")
         const apps = []
         for (const line of lines) {
-            const p = line.trim().split(/\s+/)
-            if (p.length < 6) continue
-            const sm = parseInt(p[2])
-            if (!isNaN(sm) && sm > 0)
-                apps.push({ name: "pid " + p[0], pct: sm + "%" })
+            const p = line.split(",")
+            if (p.length < 3) continue
+            const pid = p[0].trim()
+            const memMB = parseInt(p[1].trim())
+            const name = p[2].trim()
+            if (!isNaN(memMB) && memMB > 0) {
+                const displayName = name.length > 18 ? name.substring(0, 18) + "\u2026" : name
+                apps.push({ name: displayName, pct: memMB + "MB" })
+            }
         }
         root.gpuTopApps = apps.slice(0, 3)
     }
@@ -211,11 +236,20 @@ Item {
         stdout: StdioCollector { onStreamFinished: root.parseGpuTemp(text) }
     }
 
+    Process {
+        id: cpuCoresReader
+        command: ["nproc"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: root.cpuCores = parseInt(text.trim()) || 1
+        }
+    }
+
     // ── Detail readers ──────────────────────────────────────────────────────
 
     Process {
         id: diskPartReader
-        command: ["sh", "-c", "lsblk -b -l -o NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE --separator \",\" 2>/dev/null || lsblk -b -l -o NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE 2>/dev/null"]
+        command: ["lsblk", "-b", "-o", "NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE", "--pairs"]
         running: false
         stdout: StdioCollector { onStreamFinished: root.parsePartitions(text) }
     }
@@ -236,7 +270,7 @@ Item {
 
     Process {
         id: gpuTopReader
-        command: ["sh", "-c", "nvidia-smi pmon -c 1 -s u 2>/dev/null"]
+        command: ["nvidia-smi", "--query-compute-apps=pid,used_memory,name", "--format=csv,noheader,nounits"]
         running: false
         stdout: StdioCollector { onStreamFinished: root.parseGpuTopApps(text) }
     }
@@ -298,6 +332,8 @@ Item {
                     }
                 }
 
+                Item { Layout.preferredHeight: Math.round(8); visible: diskCard.isExpanded }
+
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -309,10 +345,10 @@ Item {
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.preferredWidth: Math.round(root.width * 0.22); elide: Text.ElideRight }
-                            Text { text: modelData.size; color: root.colors.text; font.pointSize: 9; Layout.preferredWidth: Math.round(root.width * 0.12) }
-                            Text { text: modelData.fstype; color: root.colors.subtext0; font.pointSize: 9; Layout.preferredWidth: Math.round(root.width * 0.12) }
-                            Text { text: modelData.mount; color: root.colors.blue; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                            Text { text: modelData.size; color: root.colors.text; font.pointSize: 9; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
+                            Text { text: modelData.fstype; color: root.colors.subtext0; font.pointSize: 9; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
+                            Text { text: modelData.mount; color: root.colors.blue; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
                         }
                     }
 
@@ -381,6 +417,8 @@ Item {
                     }
                 }
 
+                Item { Layout.preferredHeight: Math.round(8); visible: ramCard.isExpanded }
+
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -392,7 +430,7 @@ Item {
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
@@ -462,6 +500,8 @@ Item {
                     }
                 }
 
+                Item { Layout.preferredHeight: Math.round(8); visible: cpuCard.isExpanded }
+
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -480,7 +520,7 @@ Item {
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
@@ -551,6 +591,8 @@ Item {
                     }
                 }
 
+                Item { Layout.preferredHeight: Math.round(8); visible: gpuCard.isExpanded }
+
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -578,7 +620,7 @@ Item {
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
