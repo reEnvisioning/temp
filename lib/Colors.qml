@@ -57,7 +57,7 @@ Item {
     property color interactive_hover: "#6A6A6A"
     property color interactive_pressed: "#4A4A4A"
     property color interactive_disabled: "#363636"
-    property color focus: "#6A6A6A"
+    property color focus_ring: "#6A6A6A"
 
     // Input/form states
     property color input_background: "#1C1C1C"
