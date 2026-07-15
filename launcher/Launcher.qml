@@ -418,7 +418,8 @@ PanelWindow {
                     color: root.colors.text
                     font.pointSize: 10
                     clip: true
-                    cursorVisible: false
+                    cursorVisible: true
+                    cursorDelegate: Item {}
 
                     onTextChanged: root.processInput(text)
 
@@ -482,7 +483,7 @@ PanelWindow {
                 Rectangle {
                     id: blockCursor
                     property var cursorRect: inputField.positionToRectangle(inputField.cursorPosition)
-                    x: inputField.x + cursorRect.x + cursorRect.width / 2 - width / 2
+                    x: inputField.x + cursorRect.x - Math.round(2 * root.uiScale)
                     y: inputField.y + (inputField.height - height) / 2
                     width: Math.round(8 * root.uiScale)
                     height: inputField.height
