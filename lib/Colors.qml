@@ -44,11 +44,70 @@ Item {
     property color sky: "#828282"
     property color sapphire: "#6E6E6E"
     property color surface: "#505050"
+    property color bar: "#505050"
+    property color divider: "#1C1C1C"
     property color overlay1: "#2C2C2C"
     property color overlay2: "#1E1E1E"
     property color crust: "#000000"
     property color subtext0: "#A8A8A8"
     property color subtext1: "#B0B0B0"
+
+    // Interactive states
+    property color interactive: "#585858"
+    property color interactive_hover: "#6A6A6A"
+    property color interactive_pressed: "#4A4A4A"
+    property color interactive_disabled: "#363636"
+    property color focus: "#6A6A6A"
+
+    // Input/form states
+    property color input_background: "#1C1C1C"
+    property color input_border: "#363636"
+    property color input_border_focus: "#6A6A6A"
+
+    // Status indicators
+    property color status_active: "#4A5A4A"
+    property color status_inactive: "#363636"
+    property color status_syncing: "#4A4A5A"
+    property color status_processing: "#5A5A4A"
+
+    // Transfer/progress
+    property color transfer_send: "#4A7C9A"
+    property color transfer_receive: "#4A5A4A"
+    property color transfer_complete: "#4A5A4A"
+    property color transfer_failed: "#5A4A4A"
+
+    // Audio
+    property color audio_waveform: "#8A8A8A"
+    property color audio_active: "#868686"
+
+    // Syntax/code
+    property color syntax_keyword: "#767676"
+    property color syntax_string: "#868686"
+    property color syntax_number: "#7E7E7E"
+    property color syntax_comment: "#A8A8A8"
+    property color syntax_function: "#6A6A6A"
+    property color syntax_variable: "#C0C0C0"
+
+    // Charts/data
+    property color chart_1: "#666666"
+    property color chart_2: "#868686"
+    property color chart_3: "#9A9A9A"
+    property color chart_4: "#6A6A6A"
+    property color chart_5: "#929292"
+    property color chart_6: "#8A8A8A"
+    property color chart_grid: "#2C2C2C"
+
+    // Depth/elevation
+    property color elevation_1: "#1E1E1E"
+    property color elevation_2: "#2C2C2C"
+    property color elevation_3: "#363636"
+    property color overlay: "#000000"
+
+    // Text variants
+    property color link: "#6A6A6A"
+    property color link_hover: "#8A8A8A"
+    property color placeholder: "#A8A8A8"
+
     property string fontFamily: "JetBrains Mono"
     property string themeName: ""
     property string mode: "dark"

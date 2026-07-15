@@ -194,7 +194,7 @@ PanelWindow {
             anchors.left: parent.left
             anchors.right: parent.right
             height: Math.round(1 * root.uiScale)
-            color: root.colors.surface
+            color: root.colors.divider
         }
 
         Item {

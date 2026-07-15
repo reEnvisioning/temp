@@ -117,7 +117,7 @@ Item {
                     Layout.fillWidth: true
                     height: 6
                     radius: 3
-                    color: root.colors.surface
+                    color: root.colors.bar
                     Rectangle {
                         width: parent.width * root.diskPct / 100
                         height: parent.height
@@ -153,7 +153,7 @@ Item {
                     Layout.fillWidth: true
                     height: 6
                     radius: 3
-                    color: root.colors.surface
+                    color: root.colors.bar
                     Rectangle {
                         width: parent.width * root.memPct / 100
                         height: parent.height
@@ -190,7 +190,7 @@ Item {
                     Layout.fillWidth: true
                     height: 6
                     radius: 3
-                    color: root.colors.surface
+                    color: root.colors.bar
                     Rectangle {
                         width: parent.width * root.cpuPct / 100
                         height: parent.height

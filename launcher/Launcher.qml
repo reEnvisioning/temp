@@ -398,9 +398,12 @@ PanelWindow {
                 anchors.fill: parent
                 anchors.margins: Math.round(4 * root.uiScale)
                 radius: Math.round(4 * root.uiScale)
-                color: root.colors.background
-                border.color: root.colors.border
+                color: root.colors.input_background
+                border.color: root.colors.input_border
                 border.width: 1
+
+                focus: inputField.activeFocus
+                border.color: focus ? root.colors.input_border_focus : root.colors.input_border
             }
 
             Item {

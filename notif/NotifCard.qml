@@ -294,7 +294,7 @@ Item {
                         id: actionBtn
                         height: Math.round(26 * root.uiScale)
                         radius: Math.round(3 * root.uiScale)
-                        color: actionBtnMouse.containsMouse ? root.colors.highlighted : root.colors.surface
+                        color: actionBtnMouse.containsMouse ? root.colors.interactive_hover : root.colors.interactive
                         implicitWidth: actionLabel.width + Math.round(14 * root.uiScale)
 
                         Behavior on color { CAnim {} }
