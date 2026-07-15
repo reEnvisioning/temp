@@ -7,6 +7,10 @@ Item {
     // shell.qml (colors.defaults = settings.defaults). No hardcoded fallback.
     property var defaults: ({})
 
+    FontLoader {
+        source: Qt.resolvedUrl("../../fonts/JetBrainsMono-Regular.ttf")
+    }
+
     property color background: "#000000"
     property color backgroundAccent: "#1A1A1A"
     property color highlighted: "#363636"
