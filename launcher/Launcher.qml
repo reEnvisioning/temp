@@ -394,15 +394,6 @@ PanelWindow {
             height: root.inputHeight
             opacity: root.contentOpacity
 
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: Math.round(4 * root.uiScale)
-                radius: Math.round(4 * root.uiScale)
-                color: root.colors.input_background
-                border.width: 1
-                border.color: inputField.activeFocus ? root.colors.accent : root.colors.input_border
-            }
-
             Item {
                 id: inputArea
                 anchors.fill: parent
