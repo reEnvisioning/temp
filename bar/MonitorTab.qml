@@ -33,14 +33,13 @@ Item {
 
     property var prevCpu: ({ idle: 0, total: 0 })
 
+    readonly property real gridMargin: Math.round(4)
     readonly property real gap: Math.round(6)
-    readonly property real compactW: root.width > gap ? (root.width - gap) / 2 : 0
+    readonly property real compactW: root.width > gridMargin * 2 + gap ? (root.width - gridMargin * 2 - gap) / 2 : 0
     readonly property real compactH: Math.round(56)
-    readonly property real offsetX: root.width > compactW * 2 + gap ? (root.width - compactW * 2 - gap) / 2 : 0
-    readonly property real offsetY: root.height > compactH * 2 + gap ? (root.height - compactH * 2 - gap) / 2 : 0
 
-    function cardX(col: real): real { return offsetX + col * (compactW + gap) }
-    function cardY(row: real): real { return offsetY + row * (compactH + gap) }
+    function cardX(col: real): real { return gridMargin + col * (compactW + gap) }
+    function cardY(row: real): real { return gridMargin + row * (compactH + gap) }
 
     function parseCpu(line: string): void {
         const parts = line.trim().split(/\s+/)
@@ -88,7 +87,25 @@ Item {
         if (!isNaN(val) && val > 0) root.gpuTemp = val + "\u00B0C"
     }
 
-    function parsePartitions(text: string): void {
+    function parsePartitionsJson(text: string): void {
+        const parts = []
+        try {
+            const data = JSON.parse(text.trim())
+            function walk(devices) {
+                for (const d of devices) {
+                    if (d.type === "part" && d.name) {
+                        const sizeGB = (Number(d.size) / 1073741824).toFixed(0)
+                        parts.push({ name: d.name, size: sizeGB + "G", fstype: d.fstype || "\u2014", mount: d.mountpoint || "\u2014" })
+                    }
+                    if (d.children) walk(d.children)
+                }
+            }
+            if (data.blockdevices) walk(data.blockdevices)
+        } catch (e) {}
+        root.diskPartitions = parts
+    }
+
+    function parsePartitionsPairs(text: string): void {
         const lines = text.trim().split("\n")
         const parts = []
         for (const line of lines) {
@@ -97,12 +114,9 @@ Item {
             const fsM = line.match(/FSTYPE="([^"]*)"/)
             const mountM = line.match(/MOUNTPOINT="([^"]*)"/)
             const typeM = line.match(/TYPE="([^"]*)"/)
-            const type = typeM ? typeM[1] : ""
-            const name = nameM ? nameM[1] : ""
-            const size = sizeM ? sizeM[1] : ""
-            if (type === "part" && name && size) {
-                const sizeGB = (Number(size) / 1073741824).toFixed(0)
-                parts.push({ name: name, size: sizeGB + "G", fstype: fsM ? fsM[1] || "\u2014" : "\u2014", mount: mountM ? mountM[1] || "\u2014" : "\u2014" })
+            if (typeM && typeM[1] === "part" && nameM && sizeM) {
+                const sizeGB = (Number(sizeM[1]) / 1073741824).toFixed(0)
+                parts.push({ name: nameM[1], size: sizeGB + "G", fstype: fsM ? fsM[1] || "\u2014" : "\u2014", mount: mountM ? mountM[1] || "\u2014" : "\u2014" })
             }
         }
         root.diskPartitions = parts
@@ -115,38 +129,54 @@ Item {
             const p = line.trim().split(/\s+/)
             if (p.length < 11) continue
             const rawName = p[10]
-            const name = rawName.length > 18 ? rawName.substring(0, 18) + "\u2026" : rawName
             if (sortBy === "cpu") {
                 const rawPct = parseFloat(p[2])
                 if (!isNaN(rawPct) && rawPct > 0) {
                     const pct = (rawPct / root.cpuCores).toFixed(1)
-                    apps.push({ name: name, pct: pct + "%" })
+                    apps.push({ name: rawName, pct: pct + "%" })
                 }
             } else {
                 const rssKB = parseInt(p[5])
                 if (!isNaN(rssKB) && rssKB > 0) {
                     const gb = rssKB / 1048576
                     const display = gb >= 1 ? gb.toFixed(1) + "G" : (rssKB / 1024).toFixed(0) + "M"
-                    apps.push({ name: name, pct: display })
+                    apps.push({ name: rawName, pct: display })
                 }
             }
         }
         return apps.slice(0, 3)
     }
 
-    function parseGpuTopApps(text: string): void {
+    function parseGpuTopAppsPmon(text: string): void {
+        const lines = text.trim().split("\n")
+        const apps = []
+        for (const line of lines) {
+            if (line.startsWith("#") || line.trim() === "") continue
+            const p = line.trim().split(/\s+/)
+            if (p.length < 7) continue
+            const sm = parseInt(p[3])
+            const fbKB = parseInt(p[4])
+            const name = p[p.length - 1]
+            if (!isNaN(fbKB) && fbKB > 0) {
+                const mb = Math.round(fbKB / 1024)
+                apps.push({ name: name, pct: mb + "MB" })
+            } else if (!isNaN(sm) && sm > 0) {
+                apps.push({ name: name, pct: sm + "%" })
+            }
+        }
+        root.gpuTopApps = apps.slice(0, 3)
+    }
+
+    function parseGpuTopAppsQuery(text: string): void {
         const lines = text.trim().split("\n")
         const apps = []
         for (const line of lines) {
             const p = line.split(",")
             if (p.length < 3) continue
-            const pid = p[0].trim()
             const memMB = parseInt(p[1].trim())
             const name = p[2].trim()
-            if (!isNaN(memMB) && memMB > 0) {
-                const displayName = name.length > 18 ? name.substring(0, 18) + "\u2026" : name
-                apps.push({ name: displayName, pct: memMB + "MB" })
-            }
+            if (!isNaN(memMB) && memMB > 0)
+                apps.push({ name: name, pct: memMB + "MB" })
         }
         root.gpuTopApps = apps.slice(0, 3)
     }
@@ -249,9 +279,15 @@ Item {
 
     Process {
         id: diskPartReader
-        command: ["lsblk", "-b", "-o", "NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE", "--pairs"]
+        command: ["sh", "-c", "lsblk -b -J -o NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE 2>/dev/null || lsblk -b -o NAME,SIZE,FSTYPE,MOUNTPOINT,TYPE --pairs 2>/dev/null"]
         running: false
-        stdout: StdioCollector { onStreamFinished: root.parsePartitions(text) }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = text.trim()
+                if (t.startsWith("{")) root.parsePartitionsJson(t)
+                else root.parsePartitionsPairs(t)
+            }
+        }
     }
 
     Process {
@@ -270,9 +306,15 @@ Item {
 
     Process {
         id: gpuTopReader
-        command: ["nvidia-smi", "--query-compute-apps=pid,used_memory,name", "--format=csv,noheader,nounits"]
+        command: ["sh", "-c", "nvidia-smi pmon -c 1 -s um 2>/dev/null || nvidia-smi --query-compute-apps=pid,used_memory,name --format=csv,noheader,nounits 2>/dev/null"]
         running: false
-        stdout: StdioCollector { onStreamFinished: root.parseGpuTopApps(text) }
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const t = text.trim()
+                if (t.startsWith("#")) root.parseGpuTopAppsPmon(t)
+                else root.parseGpuTopAppsQuery(t)
+            }
+        }
     }
 
     // ── Disk Card ───────────────────────────────────────────────────────────
@@ -332,23 +374,23 @@ Item {
                     }
                 }
 
-                Item { Layout.preferredHeight: Math.round(8); visible: diskCard.isExpanded }
-
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: Math.round(2)
                     visible: diskCard.isExpanded
 
+                    Item { Layout.preferredHeight: Math.round(4) }
+
                     Repeater {
                         model: root.diskPartitions
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
-                            Text { text: modelData.size; color: root.colors.text; font.pointSize: 9; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
-                            Text { text: modelData.fstype; color: root.colors.subtext0; font.pointSize: 9; Layout.fillWidth: true; horizontalAlignment: Text.AlignRight }
-                            Text { text: modelData.mount; color: root.colors.blue; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideLeft; horizontalAlignment: Text.AlignLeft; maximumLineCount: 1 }
+                            Text { text: modelData.size; color: root.colors.text; font.pointSize: 9 }
+                            Text { text: modelData.fstype; color: root.colors.subtext0; font.pointSize: 9 }
+                            Text { text: modelData.mount; color: root.colors.blue; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideLeft; horizontalAlignment: Text.AlignLeft; maximumLineCount: 1 }
                         }
                     }
 
@@ -417,20 +459,20 @@ Item {
                     }
                 }
 
-                Item { Layout.preferredHeight: Math.round(8); visible: ramCard.isExpanded }
-
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: Math.round(2)
                     visible: ramCard.isExpanded
 
+                    Item { Layout.preferredHeight: Math.round(4) }
+
                     Repeater {
                         model: root.topMemApps
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideLeft; horizontalAlignment: Text.AlignLeft; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
@@ -500,8 +542,6 @@ Item {
                     }
                 }
 
-                Item { Layout.preferredHeight: Math.round(8); visible: cpuCard.isExpanded }
-
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -515,12 +555,14 @@ Item {
                         Text { text: root.cpuTemp; color: root.colors.text; font.pointSize: 9 }
                     }
 
+                    Item { Layout.preferredHeight: Math.round(4) }
+
                     Repeater {
                         model: root.topCpuApps
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideLeft; horizontalAlignment: Text.AlignLeft; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
@@ -591,8 +633,6 @@ Item {
                     }
                 }
 
-                Item { Layout.preferredHeight: Math.round(8); visible: gpuCard.isExpanded }
-
                 ColumnLayout {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
@@ -615,12 +655,14 @@ Item {
                         Text { text: root.gpuMemUsed + " / " + root.gpuMemTotal; color: root.colors.text; font.pointSize: 9 }
                     }
 
+                    Item { Layout.preferredHeight: Math.round(4) }
+
                     Repeater {
                         model: root.gpuTopApps
                         delegate: RowLayout {
                             Layout.fillWidth: true
                             spacing: 4
-                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideRight; maximumLineCount: 1 }
+                            Text { text: modelData.name; color: root.colors.subtext1; font.pointSize: 9; Layout.fillWidth: true; elide: Text.ElideLeft; horizontalAlignment: Text.AlignLeft; maximumLineCount: 1 }
                             Text { text: modelData.pct; color: root.colors.text; font.pointSize: 9 }
                         }
                     }
