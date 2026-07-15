@@ -400,9 +400,7 @@ PanelWindow {
                 radius: Math.round(4 * root.uiScale)
                 color: root.colors.input_background
                 border.width: 1
-
-                focus: inputField.activeFocus
-                border.color: focus ? root.colors.input_border_focus : root.colors.input_border
+                border.color: inputField.activeFocus ? root.colors.accent : root.colors.input_border
             }
 
             Item {
