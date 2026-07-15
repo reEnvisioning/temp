@@ -8,7 +8,14 @@ Item {
     property var defaults: ({})
 
     FontLoader {
-        source: Qt.resolvedUrl("../../fonts/JetBrainsMono-Regular.ttf")
+        id: jetbrainsMono
+        source: Qt.resolvedUrl("../fonts/JetBrainsMono-Regular.ttf")
+        onStatusChanged: {
+            if (status === FontLoader.Ready)
+                root.fontFamily = jetbrainsMono.name
+            else if (status === FontLoader.Error)
+                console.log("Colors: failed to load font:", source)
+        }
     }
 
     property color background: "#000000"
