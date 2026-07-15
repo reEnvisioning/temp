@@ -337,7 +337,7 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            radius: Math.round(12 * root.uiScale)
+            radius: Math.round(6 * root.uiScale)
             color: root.colors.background
 
             transform: Scale {
@@ -397,8 +397,10 @@ PanelWindow {
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: Math.round(4 * root.uiScale)
-                radius: Math.round(8 * root.uiScale)
-                color: root.colors.element_background
+                radius: Math.round(4 * root.uiScale)
+                color: root.colors.background
+                border.color: root.colors.border
+                border.width: 1
             }
 
             TextInput {
@@ -406,12 +408,12 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.left: parent.left
                 anchors.leftMargin: Math.round(12 * root.uiScale)
-                anchors.right: providerLabel.left
+                anchors.right: blockCursor.left
                 anchors.rightMargin: Math.round(6 * root.uiScale)
                 color: root.colors.text
                 font.pointSize: 10
                 clip: true
-                cursorVisible: true
+                cursorVisible: false
 
                 onTextChanged: root.processInput(text)
 
@@ -468,6 +470,44 @@ PanelWindow {
                             close()
                         }
                         event.accepted = true
+                    }
+                }
+            }
+
+            Rectangle {
+                id: blockCursor
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: providerLabel.left
+                anchors.rightMargin: Math.round(4 * root.uiScale)
+                width: Math.round(7 * root.uiScale)
+                height: Math.round(16 * root.uiScale)
+                radius: Math.round(1 * root.uiScale)
+                color: root.colors.accent
+                opacity: cursorBlinkTimer.running ? 0.6 : 0
+                visible: inputField.activeFocus
+
+                Timer {
+                    id: cursorBlinkTimer
+                    interval: 530
+                    running: inputField.activeFocus
+                    repeat: true
+                    onTriggered: parent.opacity = (parent.opacity > 0 ? 0 : 0.6)
+                }
+
+                Connections {
+                    target: inputField
+                    function onTextChanged() {
+                        cursorBlinkTimer.restart()
+                        blockCursor.opacity = 0.6
+                    }
+                    function onActiveFocusChanged() {
+                        if (inputField.activeFocus) {
+                            cursorBlinkTimer.restart()
+                            blockCursor.opacity = 0.6
+                        } else {
+                            cursorBlinkTimer.stop()
+                            blockCursor.opacity = 0
+                        }
                     }
                 }
             }

@@ -114,8 +114,10 @@ PanelWindow {
         y: Math.round(-12 * root.uiScale)
         width: parent.width
         height: parent.height + Math.round(12 * root.uiScale)
-        radius: Math.round(12 * root.uiScale)
+        radius: Math.round(6 * root.uiScale)
         color: root.colors.background
+        border.color: root.colors.border
+        border.width: 1
 
         transform: Scale {
             origin.x: root.panelWidth / 2
