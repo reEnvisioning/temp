@@ -34,7 +34,7 @@ Item {
 
     readonly property real gap: Math.round(6)
     readonly property real compactW: root.width > gap ? (root.width - gap) / 2 : 0
-    readonly property real compactH: root.height > gap ? (root.height - gap) / 2 : 0
+    readonly property real compactH: Math.round(56)
 
     function cardX(col: real): real { return col * (compactW + gap) }
     function cardY(row: real): real { return row * (compactH + gap) }

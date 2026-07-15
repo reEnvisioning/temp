@@ -240,6 +240,7 @@ PanelWindow {
         id: hoverArea
         anchors.fill: parent
         hoverEnabled: true
+        acceptedButtons: Qt.NoButton
 
         onEntered: {
             autoCollapseTimer.stop()
