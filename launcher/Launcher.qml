@@ -394,6 +394,15 @@ PanelWindow {
             height: root.inputHeight
             opacity: root.contentOpacity
 
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: Math.round(4 * root.uiScale)
+                radius: Math.round(4 * root.uiScale)
+                color: "transparent"
+                border.width: 1
+                border.color: root.colors.border
+            }
+
             Item {
                 id: inputArea
                 anchors.fill: parent
