@@ -58,9 +58,6 @@ Item {
     property color interactive_pressed: "#4A4A4A"
     property color interactive_disabled: "#363636"
 
-    // Input/form states
-    property color input_border: "#363636"
-
     // Status indicators
     property color status_active: "#4A5A4A"
     property color status_inactive: "#363636"
