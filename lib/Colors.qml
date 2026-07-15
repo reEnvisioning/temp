@@ -38,6 +38,7 @@ Item {
     property color crust: "#000000"
     property color subtext0: "#A8A8A8"
     property color subtext1: "#B0B0B0"
+    property string fontFamily: "JetBrains Mono"
     property string themeName: ""
     property string mode: "dark"
 

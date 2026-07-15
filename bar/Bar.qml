@@ -174,6 +174,7 @@ PanelWindow {
                             anchors.centerIn: parent
                             text: modelData
                             color: root.activeTab === index ? root.colors.text : root.colors.subtext0
+                            font.family: root.colors.fontFamily
                             font.pointSize: 10
                             font.weight: root.activeTab === index ? Font.DemiBold : Font.Normal
 

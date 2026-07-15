@@ -416,6 +416,7 @@ PanelWindow {
                     anchors.right: parent.right
                     anchors.rightMargin: Math.round(12 * root.uiScale)
                     color: root.colors.text
+                    font.family: root.colors.fontFamily
                     font.pointSize: 10
                     clip: true
                     cursorVisible: true

@@ -243,6 +243,7 @@ Item {
                 Layout.fillWidth: true
                 text: root.notifSummary
                 color: root.colors.text
+                font.family: root.colors.fontFamily
                 font.pointSize: 10
                 font.weight: Font.DemiBold
                 elide: Text.ElideRight
@@ -253,6 +254,7 @@ Item {
                 Layout.fillWidth: true
                 text: root.notifBody
                 color: root.colors.subtext1
+                font.family: root.colors.fontFamily
                 font.pointSize: 9
                 wrapMode: Text.WordWrap
                 maximumLineCount: 3
@@ -302,6 +304,7 @@ Item {
                             anchors.centerIn: parent
                             text: modelData.text
                             color: root.colors.text
+                            font.family: root.colors.fontFamily
                             font.pointSize: 9
                         }
 
