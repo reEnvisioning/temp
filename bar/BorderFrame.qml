@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import QtQuick.Shapes
 import qs.lib
 
 PanelWindow {
@@ -9,19 +10,30 @@ PanelWindow {
     property var colors: ({})
     property real uiScale: 1
     property bool barExpanded: false
+    property real barHeight: 0
+    property real barWidth: Math.round(520 * root.uiScale)
+    property real barX: (root.screen.width - root.barWidth) / 2
     property bool launcherOpen: false
+    property real launcherHeight: 0
+    property real launcherWidth: Math.round(520 * root.uiScale)
+    property real launcherX: (root.screen.width - root.launcherWidth) / 2
 
-    readonly property real thickness: Math.max(2, Math.round((settings.border.thickness || 10) * root.uiScale))
-    readonly property real moduleWidth: Math.round(520 * root.uiScale)
-    readonly property real moduleX: (root.screen.width - root.moduleWidth) / 2
-    readonly property real curveRadius: Math.round(root.thickness * 1.5)
+    // Notifications (right side)
+    property real notifHeight: 0
+    property real notifWidth: Math.round(880 * root.uiScale)
+    property real notifX: root.screen.width - root.notifWidth
+    property real notifY: Math.round(8 * root.uiScale)
 
     readonly property Settings settings: Settings {}
+    readonly property real borderWidth: Math.max(1, Math.round((settings.border.thickness || 1) * root.uiScale))
+    readonly property color borderColor: root.colors.surface
+    readonly property real earBulge: Math.round(12 * root.uiScale)
 
-    property real _topGapHalf: 0
-    property real _bottomGapHalf: 0
-    property real _topCurve: 0
-    property real _bottomCurve: 0
+    property real _barEarHeight: 0
+    property real _launcherEarHeight: 0
+
+    // Notifications
+    property real _notifEarHeight: 0
 
     implicitWidth: root.screen.width
     implicitHeight: root.screen.height
@@ -31,107 +43,328 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     onBarExpandedChanged: {
-        topGapAnim.stop()
-        topGapAnim.from = root._topGapHalf
-        topGapAnim.to = root.barExpanded ? root.moduleWidth / 2 : 0
-        topGapAnim.type = root.barExpanded ? Anim.SpatialDefault : Anim.SpatialFast
-        topGapAnim.start()
+        barEarAnim.stop()
+        barEarAnim.from = root._barEarHeight
+        barEarAnim.to = root.barExpanded ? root.barHeight : 0
+        barEarAnim.type = root.barExpanded ? Anim.SpatialDefault : Anim.SpatialFast
+        barEarAnim.start()
+    }
 
-        topCurveAnim.stop()
-        topCurveAnim.from = root._topCurve
-        topCurveAnim.to = root.barExpanded ? root.curveRadius : 0
-        topCurveAnim.type = root.barExpanded ? Anim.SpatialDefault : Anim.SpatialFast
-        topCurveAnim.start()
+    onBarHeightChanged: {
+        if (root.barExpanded) {
+            barEarAnim.stop()
+            barEarAnim.from = root._barEarHeight
+            barEarAnim.to = root.barHeight
+            barEarAnim.type = Anim.SpatialDefault
+            barEarAnim.start()
+        }
     }
 
     onLauncherOpenChanged: {
-        bottomGapAnim.stop()
-        bottomGapAnim.from = root._bottomGapHalf
-        bottomGapAnim.to = root.launcherOpen ? root.moduleWidth / 2 : 0
-        bottomGapAnim.type = root.launcherOpen ? Anim.SpatialDefault : Anim.SpatialFast
-        bottomGapAnim.start()
-
-        bottomCurveAnim.stop()
-        bottomCurveAnim.from = root._bottomCurve
-        bottomCurveAnim.to = root.launcherOpen ? root.curveRadius : 0
-        bottomCurveAnim.type = root.launcherOpen ? Anim.SpatialDefault : Anim.SpatialFast
-        bottomCurveAnim.start()
+        launcherEarAnim.stop()
+        launcherEarAnim.from = root._launcherEarHeight
+        launcherEarAnim.to = root.launcherOpen ? root.launcherHeight : 0
+        launcherEarAnim.type = root.launcherOpen ? Anim.SpatialDefault : Anim.SpatialFast
+        launcherEarAnim.start()
     }
 
-    Anim { id: topGapAnim; target: root; property: "_topGapHalf"; type: Anim.SpatialDefault }
-    Anim { id: bottomGapAnim; target: root; property: "_bottomGapHalf"; type: Anim.SpatialDefault }
-    Anim { id: topCurveAnim; target: root; property: "_topCurve"; type: Anim.SpatialDefault }
-    Anim { id: bottomCurveAnim; target: root; property: "_bottomCurve"; type: Anim.SpatialDefault }
+    onLauncherHeightChanged: {
+        if (root.launcherOpen) {
+            launcherEarAnim.stop()
+            launcherEarAnim.from = root._launcherEarHeight
+            launcherEarAnim.to = root.launcherHeight
+            launcherEarAnim.type = Anim.SpatialDefault
+            launcherEarAnim.start()
+        }
+    }
 
-    // ── Top border (splits for bar) ─────────────────────────────────────
-    Item {
+    onNotifHeightChanged: {
+        notifEarAnim.stop()
+        notifEarAnim.from = root._notifEarHeight
+        notifEarAnim.to = root.notifHeight
+        notifEarAnim.type = Anim.SpatialDefault
+        notifEarAnim.start()
+    }
+
+    Anim { id: barEarAnim; target: root; property: "_barEarHeight"; type: Anim.SpatialDefault }
+    Anim { id: launcherEarAnim; target: root; property: "_launcherEarHeight"; type: Anim.SpatialDefault }
+    Anim { id: notifEarAnim; target: root; property: "_notifEarHeight"; type: Anim.SpatialDefault }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BASE BORDER — 4 thin rectangles (1px)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Top border
+    Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        height: root.thickness
-
-        Rectangle {
-            x: 0
-            width: Math.max(0, root.moduleX - root._topGapHalf)
-            height: root.thickness
-            radius: root._topCurve
-            color: root.colors.surface
-            Behavior on color { CAnim {} }
-        }
-
-        Rectangle {
-            x: root.moduleX + root.moduleWidth + root._topGapHalf
-            width: Math.max(0, root.screen.width - root.moduleX - root.moduleWidth - root._topGapHalf)
-            height: root.thickness
-            radius: root._topCurve
-            color: root.colors.surface
-            Behavior on color { CAnim {} }
-        }
+        height: root.borderWidth
+        color: root.borderColor
+        Behavior on color { CAnim {} }
     }
 
-    // ── Bottom border (splits for launcher) ─────────────────────────────
-    Item {
+    // Bottom border
+    Rectangle {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        height: root.thickness
-
-        Rectangle {
-            x: 0
-            width: Math.max(0, root.moduleX - root._bottomGapHalf)
-            height: root.thickness
-            radius: root._bottomCurve
-            color: root.colors.surface
-            Behavior on color { CAnim {} }
-        }
-
-        Rectangle {
-            x: root.moduleX + root.moduleWidth + root._bottomGapHalf
-            width: Math.max(0, root.screen.width - root.moduleX - root.moduleWidth - root._bottomGapHalf)
-            height: root.thickness
-            radius: root._bottomCurve
-            color: root.colors.surface
-            Behavior on color { CAnim {} }
-        }
+        height: root.borderWidth
+        color: root.borderColor
+        Behavior on color { CAnim {} }
     }
 
-    // ── Left border ─────────────────────────────────────────────────────
+    // Left border
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: root.thickness
-        color: root.colors.surface
+        width: root.borderWidth
+        color: root.borderColor
         Behavior on color { CAnim {} }
     }
 
-    // ── Right border ────────────────────────────────────────────────────
+    // Right border
     Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
-        width: root.thickness
-        color: root.colors.surface
+        width: root.borderWidth
+        color: root.borderColor
         Behavior on color { CAnim {} }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // BAR EARS — extend down from top border along bar sides (outward bulge)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Left ear — attaches at bar left edge, curves outward then down
+    Shape {
+        id: barLeftEar
+        x: root.barX
+        y: root.borderWidth
+        width: root.borderWidth + root.earBulge
+        height: root._barEarHeight
+        visible: root._barEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at top-left corner of ear (on top border)
+            startX: 0; startY: 0
+
+            // Line down the inner edge (along bar left side)
+            ShapePathLine { x: 0; y: root._barEarHeight }
+
+            // Cubic curve outward (bulge) then back to border
+            ShapePathCubic {
+                x: root.borderWidth + root.earBulge
+                y: root._barEarHeight
+                control1X: root.earBulge * 0.6
+                control1Y: root._barEarHeight - root.earBulge * 0.3
+                control2X: root.earBulge * 0.6
+                control2Y: root._barEarHeight - root.earBulge * 0.3
+            }
+
+            // Line back up the outer edge (the bulge)
+            ShapePathLine { x: root.borderWidth + root.earBulge; y: 0 }
+
+            // Close path
+            ShapePathLine { x: 0; y: 0 }
+        }
+    }
+
+    // Right ear — attaches at bar right edge, curves outward then down
+    Shape {
+        id: barRightEar
+        x: root.barX + root.barWidth - root.borderWidth - root.earBulge
+        y: root.borderWidth
+        width: root.borderWidth + root.earBulge
+        height: root._barEarHeight
+        visible: root._barEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at top-right corner of ear (on top border)
+            startX: root.borderWidth + root.earBulge; startY: 0
+
+            // Line down the inner edge (along bar right side)
+            ShapePathLine { x: root.earBulge; y: root._barEarHeight }
+
+            // Cubic curve outward (bulge) then back to border
+            ShapePathCubic {
+                x: 0
+                y: root._barEarHeight
+                control1X: root.earBulge * 0.4
+                control1Y: root._barEarHeight - root.earBulge * 0.3
+                control2X: root.earBulge * 0.4
+                control2Y: root._barEarHeight - root.earBulge * 0.3
+            }
+
+            // Line back up the outer edge
+            ShapePathLine { x: 0; y: 0 }
+
+            // Close path
+            ShapePathLine { x: root.borderWidth + root.earBulge; y: 0 }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // LAUNCHER EARS — extend up from bottom border along launcher sides
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Left ear — attaches at launcher left edge, curves outward then up
+    Shape {
+        id: launcherLeftEar
+        x: root.launcherX
+        y: root.screen.height - root.borderWidth - root._launcherEarHeight
+        width: root.borderWidth + root.earBulge
+        height: root._launcherEarHeight
+        visible: root._launcherEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at bottom-left corner of ear (on bottom border)
+            startX: 0; startY: root._launcherEarHeight
+
+            // Line up the inner edge (along launcher left side)
+            ShapePathLine { x: 0; y: 0 }
+
+            // Cubic curve outward (bulge)
+            ShapePathCubic {
+                x: root.borderWidth + root.earBulge
+                y: 0
+                control1X: root.earBulge * 0.6
+                control1Y: root.earBulge * 0.3
+                control2X: root.earBulge * 0.6
+                control2Y: root.earBulge * 0.3
+            }
+
+            // Line back down the outer edge
+            ShapePathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
+
+            // Close path
+            ShapePathLine { x: 0; y: root._launcherEarHeight }
+        }
+    }
+
+    // Right ear — attaches at launcher right edge, curves outward then up
+    Shape {
+        id: launcherRightEar
+        x: root.launcherX + root.launcherWidth - root.borderWidth - root.earBulge
+        y: root.screen.height - root.borderWidth - root._launcherEarHeight
+        width: root.borderWidth + root.earBulge
+        height: root._launcherEarHeight
+        visible: root._launcherEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at bottom-right corner of ear (on bottom border)
+            startX: root.borderWidth + root.earBulge; startY: root._launcherEarHeight
+
+            // Line up the inner edge (along launcher right side)
+            ShapePathLine { x: root.earBulge; y: 0 }
+
+            // Cubic curve outward (bulge)
+            ShapePathCubic {
+                x: 0
+                y: 0
+                control1X: root.earBulge * 0.4
+                control1Y: root.earBulge * 0.3
+                control2X: root.earBulge * 0.4
+                control2Y: root.earBulge * 0.3
+            }
+
+            // Line back down the outer edge
+            ShapePathLine { x: 0; y: root._launcherEarHeight }
+
+            // Close path
+            ShapePathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // NOTIFICATION EARS — extend left from right border along notif edges
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Top ear — attaches at notification top edge, curves outward then left
+    Shape {
+        id: notifTopEar
+        x: root.screen.width - root.borderWidth - root.earBulge
+        y: root.notifY
+        width: root.earBulge + root.borderWidth
+        height: root._notifEarHeight
+        visible: root._notifEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at top-right corner of ear (on right border)
+            startX: root.earBulge + root.borderWidth; startY: 0
+
+            // Line left the inner edge (along notification top)
+            ShapePathLine { x: root.earBulge; y: 0 }
+
+            // Cubic curve outward (bulge)
+            ShapePathCubic {
+                x: 0
+                y: root._notifEarHeight
+                control1X: root.earBulge * 0.4
+                control1Y: root._notifEarHeight * 0.3
+                control2X: root.earBulge * 0.4
+                control2Y: root._notifEarHeight * 0.7
+            }
+
+            // Line back right the outer edge
+            ShapePathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
+
+            // Close path
+            ShapePathLine { x: root.earBulge + root.borderWidth; y: 0 }
+        }
+    }
+
+    // Bottom ear — attaches at notification bottom edge, curves outward then left
+    Shape {
+        id: notifBottomEar
+        x: root.screen.width - root.borderWidth - root.earBulge
+        y: root.notifY + root._notifEarHeight - root.earBulge
+        width: root.earBulge + root.borderWidth
+        height: root._notifEarHeight
+        visible: root._notifEarHeight > 1
+
+        ShapePath {
+            fillColor: root.borderColor
+            strokeColor: "transparent"
+
+            // Start at bottom-right corner of ear (on right border)
+            startX: root.earBulge + root.borderWidth; startY: root._notifEarHeight
+
+            // Line left the inner edge (along notification bottom)
+            ShapePathLine { x: root.earBulge; y: root._notifEarHeight }
+
+            // Cubic curve outward (bulge)
+            ShapePathCubic {
+                x: 0
+                y: 0
+                control1X: root.earBulge * 0.4
+                control1Y: root._notifEarHeight * 0.3
+                control2X: root.earBulge * 0.4
+                control2Y: root._notifEarHeight * 0.7
+            }
+
+            // Line back right the outer edge
+            ShapePathLine { x: root.earBulge + root.borderWidth; y: 0 }
+
+            // Close path
+            ShapePathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
+        }
     }
 }
