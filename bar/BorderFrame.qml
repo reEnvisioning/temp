@@ -21,13 +21,17 @@ PanelWindow {
     // Notifications (right side)
     property real notifHeight: 0
     property real notifWidth: Math.round(880 * root.uiScale)
-    property real notifX: root.screen.width - root.notifWidth
+    property real notifX: root.screen.width - root.notifWidth - Math.round(8 * root.uiScale)
     property real notifY: Math.round(8 * root.uiScale)
+
+    // Launcher
+    property real launcherMargin: Math.round(8 * root.uiScale)
 
     readonly property Settings settings: Settings {}
     readonly property real borderWidth: Math.max(1, Math.round((settings.border.thickness || 1) * root.uiScale))
     readonly property color borderColor: root.colors.surface
-    readonly property real earBulge: Math.round(12 * root.uiScale)
+    readonly property real earBulge: Math.round(24 * root.uiScale)
+    readonly property real earCurveDepth: Math.round(32 * root.uiScale)
 
     property real _barEarHeight: 0
     property real _launcherEarHeight: 0
@@ -158,13 +162,13 @@ PanelWindow {
             PathLine { x: 0; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
-            PathCubic {
+PathCubic {
                 x: root.borderWidth + root.earBulge
                 y: root._barEarHeight
                 control1X: root.earBulge * 0.6
-                control1Y: root._barEarHeight - root.earBulge * 0.3
+                control1Y: root._barEarHeight - root.earCurveDepth
                 control2X: root.earBulge * 0.6
-                control2Y: root._barEarHeight - root.earBulge * 0.3
+                control2Y: root._barEarHeight - root.earCurveDepth
             }
 
             // Line back up the outer edge (the bulge)
@@ -195,13 +199,13 @@ PanelWindow {
             PathLine { x: root.earBulge; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
-            PathCubic {
+PathCubic {
                 x: 0
                 y: root._barEarHeight
                 control1X: root.earBulge * 0.4
-                control1Y: root._barEarHeight - root.earBulge * 0.3
+                control1Y: root._barEarHeight - root.earCurveDepth
                 control2X: root.earBulge * 0.4
-                control2Y: root._barEarHeight - root.earBulge * 0.3
+                control2Y: root._barEarHeight - root.earCurveDepth
             }
 
             // Line back up the outer edge
@@ -220,7 +224,7 @@ PanelWindow {
     Shape {
         id: launcherLeftEar
         x: root.launcherX
-        y: root.screen.height - root.borderWidth - root._launcherEarHeight
+        y: root.screen.height - root.borderWidth - root.launcherMargin - root._launcherEarHeight
         width: root.borderWidth + root.earBulge
         height: root._launcherEarHeight
         visible: root._launcherEarHeight > 1
@@ -240,9 +244,9 @@ PanelWindow {
                 x: root.borderWidth + root.earBulge
                 y: 0
                 control1X: root.earBulge * 0.6
-                control1Y: root.earBulge * 0.3
+                control1Y: root.earCurveDepth
                 control2X: root.earBulge * 0.6
-                control2Y: root.earBulge * 0.3
+                control2Y: root.earCurveDepth
             }
 
             // Line back down the outer edge
@@ -257,7 +261,7 @@ PanelWindow {
     Shape {
         id: launcherRightEar
         x: root.launcherX + root.launcherWidth - root.borderWidth - root.earBulge
-        y: root.screen.height - root.borderWidth - root._launcherEarHeight
+        y: root.screen.height - root.borderWidth - root.launcherMargin - root._launcherEarHeight
         width: root.borderWidth + root.earBulge
         height: root._launcherEarHeight
         visible: root._launcherEarHeight > 1
@@ -277,9 +281,9 @@ PanelWindow {
                 x: 0
                 y: 0
                 control1X: root.earBulge * 0.4
-                control1Y: root.earBulge * 0.3
+                control1Y: root.earCurveDepth
                 control2X: root.earBulge * 0.4
-                control2Y: root.earBulge * 0.3
+                control2Y: root.earCurveDepth
             }
 
             // Line back down the outer edge
@@ -320,7 +324,7 @@ PanelWindow {
                 control1X: root.earBulge * 0.4
                 control1Y: root._notifEarHeight * 0.3
                 control2X: root.earBulge * 0.4
-                control2Y: root._notifEarHeight * 0.7
+                control2Y: root._notifEarHeight - root.earCurveDepth
             }
 
             // Line back right the outer edge
@@ -355,9 +359,9 @@ PanelWindow {
                 x: 0
                 y: 0
                 control1X: root.earBulge * 0.4
-                control1Y: root._notifEarHeight * 0.3
+                control1Y: root.earCurveDepth
                 control2X: root.earBulge * 0.4
-                control2Y: root._notifEarHeight * 0.7
+                control2Y: root.earCurveDepth
             }
 
             // Line back right the outer edge
