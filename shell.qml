@@ -125,6 +125,7 @@ ShellRoot {
         id: borderFrame
         colors: colors
         uiScale: root.uiScale
+        settings: settings
         barExpanded: barLoader.item ? barLoader.item.isExpanded : false
         barHeight: barLoader.item ? barLoader.item.animHeight : 0
         launcherOpen: launcherLoader.item ? launcherLoader.item.isOpen : false

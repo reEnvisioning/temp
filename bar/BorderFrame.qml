@@ -27,17 +27,20 @@ PanelWindow {
     // Launcher
     property real launcherMargin: Math.round(8 * root.uiScale)
 
-    readonly property Settings settings: Settings {}
-    readonly property real borderWidth: Math.max(1, Math.round((settings.border.thickness || 1) * root.uiScale))
+    required property Settings settings
+    readonly property real borderWidth: Math.max(1, Math.round((settings.border?.thickness ?? 1) * root.uiScale))
     readonly property color borderColor: root.colors.surface
-    readonly property real earBulge: Math.round(24 * root.uiScale)
-    readonly property real earCurveDepth: Math.round(32 * root.uiScale)
+    readonly property real earBulge: Math.round(28 * root.uiScale)
+    readonly property real earCurveDepth: Math.round(40 * root.uiScale)
 
     property real _barEarHeight: 0
     property real _launcherEarHeight: 0
-
-    // Notifications
     property real _notifEarHeight: 0
+
+    // Track actual visual heights for ears
+    readonly property real barVisualHeight: root.barHeight + Math.round(12 * root.uiScale)
+    readonly property real launcherVisualHeight: root.launcherHeight + root.launcherMargin
+    readonly property real notifVisualHeight: root.notifHeight
 
     implicitWidth: root.screen.width
     implicitHeight: root.screen.height
@@ -49,7 +52,7 @@ PanelWindow {
     onBarExpandedChanged: {
         barEarAnim.stop()
         barEarAnim.from = root._barEarHeight
-        barEarAnim.to = root.barExpanded ? root.barHeight : 0
+        barEarAnim.to = root.barExpanded ? root.barVisualHeight : 0
         barEarAnim.type = root.barExpanded ? Anim.SpatialDefault : Anim.SpatialFast
         barEarAnim.start()
     }
@@ -58,25 +61,25 @@ PanelWindow {
         if (root.barExpanded) {
             barEarAnim.stop()
             barEarAnim.from = root._barEarHeight
-            barEarAnim.to = root.barHeight
+            barEarAnim.to = root.barVisualHeight
             barEarAnim.type = Anim.SpatialDefault
             barEarAnim.start()
         }
     }
 
-    onLauncherOpenChanged: {
+onLauncherOpenChanged: {
         launcherEarAnim.stop()
         launcherEarAnim.from = root._launcherEarHeight
-        launcherEarAnim.to = root.launcherOpen ? root.launcherHeight : 0
+        launcherEarAnim.to = root.launcherOpen ? root.launcherVisualHeight : 0
         launcherEarAnim.type = root.launcherOpen ? Anim.SpatialDefault : Anim.SpatialFast
         launcherEarAnim.start()
     }
 
-    onLauncherHeightChanged: {
+onLauncherHeightChanged: {
         if (root.launcherOpen) {
             launcherEarAnim.stop()
             launcherEarAnim.from = root._launcherEarHeight
-            launcherEarAnim.to = root.launcherHeight
+            launcherEarAnim.to = root.launcherVisualHeight
             launcherEarAnim.type = Anim.SpatialDefault
             launcherEarAnim.start()
         }
@@ -85,7 +88,7 @@ PanelWindow {
     onNotifHeightChanged: {
         notifEarAnim.stop()
         notifEarAnim.from = root._notifEarHeight
-        notifEarAnim.to = root.notifHeight
+        notifEarAnim.to = root.notifVisualHeight
         notifEarAnim.type = Anim.SpatialDefault
         notifEarAnim.start()
     }
