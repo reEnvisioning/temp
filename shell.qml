@@ -120,6 +120,15 @@ ShellRoot {
         Launcher {}
     }
 
+    // ── Screen border frame (curves open when modules expand) ────────────
+    BorderFrame {
+        id: borderFrame
+        colors: colors
+        uiScale: root.uiScale
+        barExpanded: barLoader.item ? barLoader.item.isExpanded : false
+        launcherOpen: launcherLoader.item ? launcherLoader.item.isOpen : false
+    }
+
     // ── Proxy / VPN status reader ──────────────────────────────────────────
     Process {
         id: proxyReader

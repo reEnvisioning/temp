@@ -93,6 +93,10 @@
     "clipboard": true,
     "launcher": true
   },
+  "border": {
+    "thickness": 10,
+    "rounding": 15
+  },
   "launcherProviders": {
     "app": true,
     "shell": true,

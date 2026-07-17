@@ -20,7 +20,6 @@ PanelWindow {
     property real animHeight: root.collapsedHeight
     property real widthScaleAnim: 1.0
     property real glowAlpha: 0
-    property real bgRadius: Math.round(6 * root.uiScale)
     property real tab0Slide: 0
     property real tab1Slide: 0
     property real tab2Slide: 0
@@ -52,12 +51,6 @@ PanelWindow {
         glowAnim.to = root.isExpanded ? 1 : 0
         glowAnim.type = root.isExpanded ? Anim.EffectsDefault : Anim.EffectsFast
         glowAnim.start()
-
-        radiusAnim.stop()
-        radiusAnim.from = root.bgRadius
-        radiusAnim.to = root.isExpanded ? Math.round(6 * root.uiScale) : Math.round(16 * root.uiScale)
-        radiusAnim.type = root.isExpanded ? Anim.SpatialDefault : Anim.SpatialFast
-        radiusAnim.start()
     }
 
     onActiveTabChanged: {
@@ -88,7 +81,6 @@ PanelWindow {
     Anim { id: expandAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
     Anim { id: widthTaperAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
-    Anim { id: radiusAnim; target: root; property: "bgRadius"; type: Anim.SpatialDefault }
     Anim { id: tab0SlideAnim; target: root; property: "tab0Slide"; type: Anim.EmphasizedDecel }
     Anim { id: tab1SlideAnim; target: root; property: "tab1Slide"; type: Anim.EmphasizedDecel }
     Anim { id: tab2SlideAnim; target: root; property: "tab2Slide"; type: Anim.EmphasizedDecel }
@@ -122,9 +114,9 @@ PanelWindow {
         y: Math.round(-12 * root.uiScale)
         width: parent.width
         height: parent.height + Math.round(12 * root.uiScale)
-        radius: root.bgRadius
+        radius: Math.round(6 * root.uiScale)
         color: root.colors.background
-        border.color: root.colors.background
+        border.color: root.colors.border
         border.width: 1
         opacity: root.isExpanded ? 1 : Math.max(0, (root.animHeight - root.collapsedHeight) / (15 * root.uiScale))
 

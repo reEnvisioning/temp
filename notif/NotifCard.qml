@@ -18,7 +18,6 @@ Item {
     property bool showActions: false
     property bool actionInvoked: false
     property bool actionBtnPressed: false
-    property real cardRadius: Math.round(6 * root.uiScale)
 
     function updateFrom(notification) {
         reused = true
@@ -60,7 +59,6 @@ Item {
     Anim { id: cardScaleAnim; target: root; property: "cardScale" }
     Anim { id: slideAnim; target: root; property: "x" }
     Anim { id: opacityAnim; target: root; property: "opacity" }
-    Anim { id: radiusAnim; target: root; property: "cardRadius" }
 
     Component.onCompleted: {
         cardScaleAnim.stop()
@@ -80,12 +78,6 @@ Item {
         opacityAnim.to = 1
         opacityAnim.type = Anim.EffectsSlow
         opacityAnim.start()
-
-        radiusAnim.stop()
-        radiusAnim.from = Math.round(16 * root.uiScale)
-        radiusAnim.to = Math.round(6 * root.uiScale)
-        radiusAnim.type = Anim.SpatialDefault
-        radiusAnim.start()
         try {
             var n = root.notif
             notifSummary = n.summary || ""
@@ -124,12 +116,6 @@ Item {
         opacityAnim.type = Anim.StandardAccel
         opacityAnim.start()
 
-        radiusAnim.stop()
-        radiusAnim.from = root.cardRadius
-        radiusAnim.to = Math.round(16 * root.uiScale)
-        radiusAnim.type = Anim.StandardAccel
-        radiusAnim.start()
-
         exitTimer.start()
         try { root.notif.dismiss() } catch (e) {}
     }
@@ -147,9 +133,9 @@ Item {
         id: card
         width: parent.width
         height: innerLayout.height + Math.round(16 * root.uiScale)
-        radius: root.cardRadius
+        radius: Math.round(6 * root.uiScale)
         color: root.colors.background
-        border.color: root.colors.background
+        border.color: root.colors.border
         border.width: 1
         clip: true
 
@@ -158,7 +144,7 @@ Item {
         // Critical urgency subtle tint
         Rectangle {
             anchors.fill: parent
-            radius: root.cardRadius
+            radius: Math.round(6 * root.uiScale)
             color: root.colors.red
             opacity: root.notifUrgency === 2 ? 0.08 : 0
             Behavior on opacity { Anim { type: Anim.EffectsDefault } }
