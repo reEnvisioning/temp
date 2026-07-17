@@ -118,9 +118,7 @@ PanelWindow {
         color: root.colors.background
         border.color: root.colors.border
         border.width: 1
-        opacity: root.isExpanded ? 1 : 0
-
-        Behavior on opacity { Anim { type: Anim.EffectsDefault } }
+        opacity: root.isExpanded ? 1 : Math.max(0, (root.animHeight - root.collapsedHeight) / (15 * root.uiScale))
 
         transform: Scale {
             origin.x: root.panelWidth / 2
