@@ -21,6 +21,7 @@ PanelWindow {
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
+    property real bgRadius: Math.round(6 * root.uiScale)
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -104,6 +105,7 @@ PanelWindow {
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
+    Anim { id: radiusAnim; target: root; property: "bgRadius"; type: Anim.SpatialDefault }
 
     Connections {
         target: heightAnim
@@ -139,6 +141,14 @@ PanelWindow {
         glowAnim.to = to
         glowAnim.type = type
         glowAnim.start()
+    }
+
+    function animateRadiusTo(to, type) {
+        radiusAnim.stop()
+        radiusAnim.from = root.bgRadius
+        radiusAnim.to = to
+        radiusAnim.type = type
+        radiusAnim.start()
     }
 
     function animateContentTo(to, type, delay) {
@@ -232,6 +242,7 @@ PanelWindow {
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
+        animateRadiusTo(Math.round(16 * root.uiScale), Anim.SpatialFast)
     }
 
     function resetState() {
@@ -248,6 +259,7 @@ PanelWindow {
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
+        animateRadiusTo(Math.round(6 * root.uiScale), Anim.SpatialDefault)
     }
 
     function processInput(text) {
@@ -337,8 +349,10 @@ PanelWindow {
 
         Rectangle {
             anchors.fill: parent
-            radius: Math.round(6 * root.uiScale)
+            radius: root.bgRadius
             color: root.colors.background
+            border.color: root.colors.background
+            border.width: 1
 
             transform: Scale {
                 origin.y: contentWrapper.height
