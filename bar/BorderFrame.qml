@@ -155,7 +155,7 @@ PanelWindow {
             startX: 0; startY: 0
 
             // Line down the inner edge (along bar left side)
-            ShapePathLine { x: 0; y: root._barEarHeight }
+            PathLine { x: 0; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
             PathCubic {
@@ -168,10 +168,10 @@ PanelWindow {
             }
 
             // Line back up the outer edge (the bulge)
-            ShapePathLine { x: root.borderWidth + root.earBulge; y: 0 }
+            PathLine { x: root.borderWidth + root.earBulge; y: 0 }
 
             // Close path
-            ShapePathLine { x: 0; y: 0 }
+            PathLine { x: 0; y: 0 }
         }
     }
 
@@ -192,7 +192,7 @@ PanelWindow {
             startX: root.borderWidth + root.earBulge; startY: 0
 
             // Line down the inner edge (along bar right side)
-            ShapePathLine { x: root.earBulge; y: root._barEarHeight }
+            PathLine { x: root.earBulge; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
             PathCubic {
@@ -205,10 +205,10 @@ PanelWindow {
             }
 
             // Line back up the outer edge
-            ShapePathLine { x: 0; y: 0 }
+            PathLine { x: 0; y: 0 }
 
             // Close path
-            ShapePathLine { x: root.borderWidth + root.earBulge; y: 0 }
+            PathLine { x: root.borderWidth + root.earBulge; y: 0 }
         }
     }
 
@@ -233,7 +233,7 @@ PanelWindow {
             startX: 0; startY: root._launcherEarHeight
 
             // Line up the inner edge (along launcher left side)
-            ShapePathLine { x: 0; y: 0 }
+            PathLine { x: 0; y: 0 }
 
             // Cubic curve outward (bulge)
             PathCubic {
@@ -246,10 +246,10 @@ PanelWindow {
             }
 
             // Line back down the outer edge
-            ShapePathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
+            PathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
 
             // Close path
-            ShapePathLine { x: 0; y: root._launcherEarHeight }
+            PathLine { x: 0; y: root._launcherEarHeight }
         }
     }
 
@@ -270,7 +270,7 @@ PanelWindow {
             startX: root.borderWidth + root.earBulge; startY: root._launcherEarHeight
 
             // Line up the inner edge (along launcher right side)
-            ShapePathLine { x: root.earBulge; y: 0 }
+            PathLine { x: root.earBulge; y: 0 }
 
             // Cubic curve outward (bulge)
             PathCubic {
@@ -283,10 +283,10 @@ PanelWindow {
             }
 
             // Line back down the outer edge
-            ShapePathLine { x: 0; y: root._launcherEarHeight }
+            PathLine { x: 0; y: root._launcherEarHeight }
 
             // Close path
-            ShapePathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
+            PathLine { x: root.borderWidth + root.earBulge; y: root._launcherEarHeight }
         }
     }
 
@@ -311,7 +311,7 @@ PanelWindow {
             startX: root.earBulge + root.borderWidth; startY: 0
 
             // Line left the inner edge (along notification top)
-            ShapePathLine { x: root.earBulge; y: 0 }
+            PathLine { x: root.earBulge; y: 0 }
 
             // Cubic curve outward (bulge)
             PathCubic {
@@ -324,10 +324,10 @@ PanelWindow {
             }
 
             // Line back right the outer edge
-            ShapePathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
+            PathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
 
             // Close path
-            ShapePathLine { x: root.earBulge + root.borderWidth; y: 0 }
+            PathLine { x: root.earBulge + root.borderWidth; y: 0 }
         }
     }
 
@@ -348,7 +348,7 @@ PanelWindow {
             startX: root.earBulge + root.borderWidth; startY: root._notifEarHeight
 
             // Line left the inner edge (along notification bottom)
-            ShapePathLine { x: root.earBulge; y: root._notifEarHeight }
+            PathLine { x: root.earBulge; y: root._notifEarHeight }
 
             // Cubic curve outward (bulge)
             PathCubic {
@@ -361,10 +361,10 @@ PanelWindow {
             }
 
             // Line back right the outer edge
-            ShapePathLine { x: root.earBulge + root.borderWidth; y: 0 }
+            PathLine { x: root.earBulge + root.borderWidth; y: 0 }
 
             // Close path
-            ShapePathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
+            PathLine { x: root.earBulge + root.borderWidth; y: root._notifEarHeight }
         }
     }
 }
