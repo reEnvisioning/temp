@@ -158,7 +158,7 @@ PanelWindow {
             ShapePathLine { x: 0; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
-            ShapePathCubic {
+            PathCubic {
                 x: root.borderWidth + root.earBulge
                 y: root._barEarHeight
                 control1X: root.earBulge * 0.6
@@ -195,7 +195,7 @@ PanelWindow {
             ShapePathLine { x: root.earBulge; y: root._barEarHeight }
 
             // Cubic curve outward (bulge) then back to border
-            ShapePathCubic {
+            PathCubic {
                 x: 0
                 y: root._barEarHeight
                 control1X: root.earBulge * 0.4
@@ -236,7 +236,7 @@ PanelWindow {
             ShapePathLine { x: 0; y: 0 }
 
             // Cubic curve outward (bulge)
-            ShapePathCubic {
+            PathCubic {
                 x: root.borderWidth + root.earBulge
                 y: 0
                 control1X: root.earBulge * 0.6
@@ -273,7 +273,7 @@ PanelWindow {
             ShapePathLine { x: root.earBulge; y: 0 }
 
             // Cubic curve outward (bulge)
-            ShapePathCubic {
+            PathCubic {
                 x: 0
                 y: 0
                 control1X: root.earBulge * 0.4
@@ -314,7 +314,7 @@ PanelWindow {
             ShapePathLine { x: root.earBulge; y: 0 }
 
             // Cubic curve outward (bulge)
-            ShapePathCubic {
+            PathCubic {
                 x: 0
                 y: root._notifEarHeight
                 control1X: root.earBulge * 0.4
@@ -351,7 +351,7 @@ PanelWindow {
             ShapePathLine { x: root.earBulge; y: root._notifEarHeight }
 
             // Cubic curve outward (bulge)
-            ShapePathCubic {
+            PathCubic {
                 x: 0
                 y: 0
                 control1X: root.earBulge * 0.4
