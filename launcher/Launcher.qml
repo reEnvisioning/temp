@@ -86,7 +86,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight
+    implicitHeight: root.animHeight
     visible: root.animHeight > 0
     color: "transparent"
     focusable: true
