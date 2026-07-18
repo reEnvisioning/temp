@@ -71,16 +71,20 @@ Item {
         onTriggered: root.refreshProfile()
     }
 
+    readonly property real gridMargin: Math.round(4)
+    readonly property real compactH: Math.round(56)
+    readonly property real gap: Math.round(Math.max(6, (root.height - gridMargin * 2 - compactH * 2)))
+
     GridLayout {
         anchors.fill: parent
-        anchors.margins: Math.round(4)
+        anchors.margins: root.gridMargin
         columns: 2
-        rowSpacing: Math.round(6)
-        columnSpacing: Math.round(6)
+        rowSpacing: root.gap
+        columnSpacing: root.gap
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
+            Layout.preferredHeight: root.compactH
             radius: Math.round(8)
             color: root.colors.element_background
             Behavior on color { CAnim {} }
@@ -112,7 +116,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
+            Layout.preferredHeight: root.compactH
             radius: Math.round(8)
             color: root.colors.element_background
             Behavior on color { CAnim {} }
@@ -144,7 +148,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
+            Layout.preferredHeight: root.compactH
             radius: Math.round(8)
             color: root.colors.element_background
             Behavior on color { CAnim {} }
@@ -176,7 +180,7 @@ Item {
 
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
+            Layout.preferredHeight: root.compactH
             radius: Math.round(8)
             color: root.colors.element_background
             Behavior on color { CAnim {} }

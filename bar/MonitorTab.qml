@@ -20,9 +20,9 @@ Item {
     property string expandedCard: ""
 
     readonly property real gridMargin: Math.round(4)
-    readonly property real gap: Math.round(6)
-    readonly property real compactW: root.width > gridMargin * 2 + gap ? (root.width - gridMargin * 2 - gap) / 2 : 0
     readonly property real compactH: Math.round(56)
+    readonly property real gap: Math.round(Math.max(6, (root.height - gridMargin * 2 - compactH * 2)))
+    readonly property real compactW: root.width > gridMargin * 2 + gap ? (root.width - gridMargin * 2 - gap) / 2 : 0
 
     function cardX(col: real): real { return gridMargin + col * (compactW + gap) }
     function cardY(row: real): real { return gridMargin + row * (compactH + gap) }
