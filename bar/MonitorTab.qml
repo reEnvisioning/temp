@@ -19,6 +19,14 @@ Item {
     property real cpuPct: 0
     property string expandedCard: ""
 
+    readonly property real gridMargin: Math.round(4)
+    readonly property real gap: Math.round(6)
+    readonly property real compactW: root.width > gridMargin * 2 + gap ? (root.width - gridMargin * 2 - gap) / 2 : 0
+    readonly property real compactH: Math.round(56)
+
+    function cardX(col: real): real { return gridMargin + col * (compactW + gap) }
+    function cardY(row: real): real { return gridMargin + row * (compactH + gap) }
+
     property var prevCpu: ({ idle: 0, total: 0 })
 
     function parseCpu(line: string): void {
@@ -36,10 +44,10 @@ Item {
         diskReader.running = false; diskReader.running = true
         memReader.running = false; memReader.running = true
         cpuReader.running = false; cpuReader.running = true
-        if (root.expandedCard === "disk") diskOverlay.refresh()
-        if (root.expandedCard === "ram") ramOverlay.refresh()
-        if (root.expandedCard === "cpu") cpuOverlay.refresh()
-        if (root.expandedCard === "gpu") gpuOverlay.refresh()
+        if (diskCard.isExpanded) diskCard.refresh()
+        if (ramCard.isExpanded) ramCard.refresh()
+        if (cpuCard.isExpanded) cpuCard.refresh()
+        if (gpuCard.isExpanded) gpuCard.refresh()
     }
 
     Timer { interval: 3000; running: true; repeat: true; onTriggered: root.refresh() }
@@ -85,75 +93,8 @@ Item {
         stdout: StdioCollector { onStreamFinished: root.parseCpu(text.trim()) }
     }
 
-    GridLayout {
-        anchors.fill: parent
-        anchors.margins: Math.round(4)
-        columns: 2
-        rowSpacing: Math.round(6)
-        columnSpacing: Math.round(6)
-        visible: root.expandedCard === ""
-
-        DiskCard {
-            id: diskCard
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
-            colors: root.colors
-            uiScale: root.uiScale
-            cardId: "disk"
-            cardTitle: "Disk"
-            cardValue: root.diskUsed + " / " + root.diskTotal
-            progressValue: root.diskPct
-            progressColor: root.colors.blue
-            onClicked: root.expandedCard = "disk"
-        }
-
-        RamCard {
-            id: ramCard
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
-            colors: root.colors
-            uiScale: root.uiScale
-            cardId: "ram"
-            cardTitle: "RAM"
-            cardValue: root.memUsed + " / " + root.memTotal
-            progressValue: root.memPct
-            progressColor: root.colors.green
-            onClicked: root.expandedCard = "ram"
-        }
-
-        CpuCard {
-            id: cpuCard
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
-            colors: root.colors
-            uiScale: root.uiScale
-            cardId: "cpu"
-            cardTitle: "CPU"
-            cardValue: root.cpuPct + "%"
-            progressValue: root.cpuPct
-            progressColor: root.colors.magenta
-            onClicked: root.expandedCard = "cpu"
-        }
-
-        GpuCard {
-            id: gpuCard
-            Layout.fillWidth: true
-            Layout.preferredHeight: Math.round(56)
-            colors: root.colors
-            uiScale: root.uiScale
-            cardId: "gpu"
-            cardTitle: "GPU"
-            cardValue: available ? (progressValue + "%") : "N/A"
-            progressValue: 0
-            progressColor: root.colors.yellow
-            onClicked: root.expandedCard = "gpu"
-        }
-    }
-
     DiskCard {
-        id: diskOverlay
-        visible: root.expandedCard === "disk"
-        anchors.fill: parent
+        id: diskCard
         colors: root.colors
         uiScale: root.uiScale
         cardId: "disk"
@@ -161,16 +102,21 @@ Item {
         cardValue: root.diskUsed + " / " + root.diskTotal
         progressValue: root.diskPct
         progressColor: root.colors.blue
-        isExpanded: true
-        z: 10
-        onClicked: root.expandedCard = ""
-        onVisibleChanged: { if (visible) diskOverlay.refresh() }
+        isExpanded: root.expandedCard === "disk"
+        isHidden: root.expandedCard !== "" && !isExpanded
+        x: isExpanded ? 0 : root.cardX(0)
+        y: isExpanded ? 0 : root.cardY(0)
+        width: isExpanded ? root.width : root.compactW
+        height: isExpanded ? root.height : root.compactH
+        opacity: isHidden ? 0 : 1
+        z: isExpanded ? 10 : 0
+        enabled: !isHidden
+        onClicked: root.expandedCard = isExpanded ? "" : "disk"
+        onIsExpandedChanged: { if (isExpanded) refresh() }
     }
 
     RamCard {
-        id: ramOverlay
-        visible: root.expandedCard === "ram"
-        anchors.fill: parent
+        id: ramCard
         colors: root.colors
         uiScale: root.uiScale
         cardId: "ram"
@@ -178,16 +124,21 @@ Item {
         cardValue: root.memUsed + " / " + root.memTotal
         progressValue: root.memPct
         progressColor: root.colors.green
-        isExpanded: true
-        z: 10
-        onClicked: root.expandedCard = ""
-        onVisibleChanged: { if (visible) ramOverlay.refresh() }
+        isExpanded: root.expandedCard === "ram"
+        isHidden: root.expandedCard !== "" && !isExpanded
+        x: isExpanded ? 0 : root.cardX(1)
+        y: isExpanded ? 0 : root.cardY(0)
+        width: isExpanded ? root.width : root.compactW
+        height: isExpanded ? root.height : root.compactH
+        opacity: isHidden ? 0 : 1
+        z: isExpanded ? 10 : 0
+        enabled: !isHidden
+        onClicked: root.expandedCard = isExpanded ? "" : "ram"
+        onIsExpandedChanged: { if (isExpanded) refresh() }
     }
 
     CpuCard {
-        id: cpuOverlay
-        visible: root.expandedCard === "cpu"
-        anchors.fill: parent
+        id: cpuCard
         colors: root.colors
         uiScale: root.uiScale
         cardId: "cpu"
@@ -195,16 +146,21 @@ Item {
         cardValue: root.cpuPct + "%"
         progressValue: root.cpuPct
         progressColor: root.colors.magenta
-        isExpanded: true
-        z: 10
-        onClicked: root.expandedCard = ""
-        onVisibleChanged: { if (visible) cpuOverlay.refresh() }
+        isExpanded: root.expandedCard === "cpu"
+        isHidden: root.expandedCard !== "" && !isExpanded
+        x: isExpanded ? 0 : root.cardX(0)
+        y: isExpanded ? 0 : root.cardY(1)
+        width: isExpanded ? root.width : root.compactW
+        height: isExpanded ? root.height : root.compactH
+        opacity: isHidden ? 0 : 1
+        z: isExpanded ? 10 : 0
+        enabled: !isHidden
+        onClicked: root.expandedCard = isExpanded ? "" : "cpu"
+        onIsExpandedChanged: { if (isExpanded) refresh() }
     }
 
     GpuCard {
-        id: gpuOverlay
-        visible: root.expandedCard === "gpu"
-        anchors.fill: parent
+        id: gpuCard
         colors: root.colors
         uiScale: root.uiScale
         cardId: "gpu"
@@ -212,9 +168,16 @@ Item {
         cardValue: available ? (progressValue + "%") : "N/A"
         progressValue: 0
         progressColor: root.colors.yellow
-        isExpanded: true
-        z: 10
-        onClicked: root.expandedCard = ""
-        onVisibleChanged: { if (visible) gpuOverlay.refresh() }
+        isExpanded: root.expandedCard === "gpu"
+        isHidden: root.expandedCard !== "" && !isExpanded
+        x: isExpanded ? 0 : root.cardX(1)
+        y: isExpanded ? 0 : root.cardY(1)
+        width: isExpanded ? root.width : root.compactW
+        height: isExpanded ? root.height : root.compactH
+        opacity: isHidden ? 0 : 1
+        z: isExpanded ? 10 : 0
+        enabled: !isHidden
+        onClicked: root.expandedCard = isExpanded ? "" : "gpu"
+        onIsExpandedChanged: { if (isExpanded) refresh() }
     }
 }
