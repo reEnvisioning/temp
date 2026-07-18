@@ -20,8 +20,7 @@ PanelWindow {
     property real animHeight: 0
     property real contentOpacity: 0
     property real glowAlpha: 0
-    property real slideOffset: 0
-    property real cardScale: 1.0
+    property real searchSlide: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -38,8 +37,7 @@ PanelWindow {
     property list<QtObject> providers: []
 
     Component.onCompleted: {
-        root.slideOffset = root.fullHeight
-        root.cardScale = 0.95
+        root.searchSlide = root.inputHeight + 8
         rebuildProviders()
     }
 
@@ -105,8 +103,7 @@ PanelWindow {
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
-    Anim { id: slideAnim; target: root; property: "slideOffset"; type: Anim.SpatialDefault }
-    Anim { id: scaleAnim; target: root; property: "cardScale"; type: Anim.SpatialDefault }
+    Anim { id: slideAnim; target: root; property: "searchSlide"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
@@ -121,9 +118,9 @@ PanelWindow {
         }
     }
 
-    function animateTo(to, type) {
+    function animateSearchTo(to, type) {
         slideAnim.stop()
-        slideAnim.from = root.slideOffset
+        slideAnim.from = root.searchSlide
         slideAnim.to = to
         slideAnim.type = type
         slideAnim.start()
@@ -224,12 +221,7 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateTo(root.fullHeight, Anim.StandardAccel)
-        scaleAnim.stop()
-        scaleAnim.from = root.cardScale
-        scaleAnim.to = 0.95
-        scaleAnim.type = Anim.StandardAccel
-        scaleAnim.start()
+        animateSearchTo(root.inputHeight + 8, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
     }
@@ -244,12 +236,7 @@ PanelWindow {
         inputField.text = ""
         rebuildItems()
         root.animHeight = root.inputHeight + root.computeListHeight()
-        animateTo(0, Anim.Bounce)
-        scaleAnim.stop()
-        scaleAnim.from = root.cardScale
-        scaleAnim.to = 1.0
-        scaleAnim.type = Anim.Bounce
-        scaleAnim.start()
+        animateSearchTo(0, Anim.Bounce)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
     }
@@ -325,17 +312,6 @@ PanelWindow {
         anchors.bottom: parent.bottom
         width: parent.width
         height: root.fullHeight
-        clip: true
-
-        transform: [
-            Scale {
-                origin.x: root.panelWidth / 2
-                origin.y: contentWrapper.height
-                xScale: root.cardScale
-                yScale: root.cardScale
-            },
-            Translate { y: root.slideOffset }
-        ]
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -399,6 +375,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             height: root.inputHeight
             opacity: root.contentOpacity
+            transform: Translate { y: root.searchSlide }
 
             Rectangle {
                 anchors.fill: parent
