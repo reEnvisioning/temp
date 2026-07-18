@@ -29,7 +29,6 @@ Item {
             property real uiScale: 1
             property var defaults: ({})
             property var modules: ({})
-            property var border: ({})
             property var launcherProviders: ({})
         }
     }
@@ -38,7 +37,6 @@ Item {
         if (s.uiScale !== undefined) root._uiScale = s.uiScale
         if (s.defaults !== undefined) root._defaults = s.defaults
         if (s.modules !== undefined) root._modules = s.modules
-        if (s.border !== undefined) root._border = s.border
         if (s.launcherProviders !== undefined) root._launcherProviders = s.launcherProviders
         if (s.themePath !== undefined) root._themePath = s.themePath
         if (s.dataPath !== undefined) root._dataPath = s.dataPath
@@ -50,7 +48,6 @@ Item {
     property real _uiScale: 1
     property var _defaults: ({})
     property var _modules: ({})
-    property var _border: ({})
     property var _launcherProviders: ({})
 
     readonly property string themePath: resolve(_themePath)
@@ -58,7 +55,6 @@ Item {
     readonly property real uiScale: _uiScale
     readonly property var defaults: _defaults
     readonly property var modules: _modules
-    readonly property var border: _border
     readonly property var launcherProviders: _launcherProviders
 
     // ── Helpers ────────────────────────────────────────────────────────────
