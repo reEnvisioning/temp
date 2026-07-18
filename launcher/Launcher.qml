@@ -97,7 +97,6 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
     WlrLayershell.namespace: "launcher"
-    clip: true
     anchors.bottom: true
     margins {
         bottom: Math.round(8 * root.uiScale) - root.slideY
