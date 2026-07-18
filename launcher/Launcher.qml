@@ -20,7 +20,6 @@ PanelWindow {
     property real animHeight: 0
     property real contentOpacity: 0
     property real glowAlpha: 0
-    property real searchSlide: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -36,10 +35,7 @@ PanelWindow {
 
     property list<QtObject> providers: []
 
-    Component.onCompleted: {
-        root.searchSlide = root.inputHeight + 8
-        rebuildProviders()
-    }
+    Component.onCompleted: rebuildProviders()
 
     Component { id: appProvCmp; AppProvider {} }
     Component { id: shellProvCmp; ShellProvider {} }
@@ -89,7 +85,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight
+    implicitHeight: root.animHeight
     visible: true
     color: "transparent"
     focusable: true
@@ -103,12 +99,12 @@ PanelWindow {
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
-    Anim { id: slideAnim; target: root; property: "searchSlide"; type: Anim.SpatialDefault }
+    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
     Connections {
-        target: slideAnim
+        target: heightAnim
         function onFinished() {
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
@@ -118,12 +114,12 @@ PanelWindow {
         }
     }
 
-    function animateSearchTo(to, type) {
-        slideAnim.stop()
-        slideAnim.from = root.searchSlide
-        slideAnim.to = to
-        slideAnim.type = type
-        slideAnim.start()
+    function animateTo(h, type) {
+        heightAnim.stop()
+        heightAnim.from = root.animHeight
+        heightAnim.to = h
+        heightAnim.type = type
+        heightAnim.start()
     }
 
     function animateGlowTo(to, type) {
@@ -221,7 +217,7 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateSearchTo(root.inputHeight + 8, Anim.StandardAccel)
+        animateTo(0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
     }
@@ -235,8 +231,8 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        root.animHeight = root.inputHeight + root.computeListHeight()
-        animateSearchTo(0, Anim.Bounce)
+        var targetH = root.inputHeight + root.computeListHeight()
+        animateTo(targetH, Anim.Bounce)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
     }
@@ -271,7 +267,9 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        root.animHeight = root.inputHeight + root.computeListHeight()
+        var h = root.inputHeight + root.computeListHeight()
+        if (h === root.animHeight) return
+        animateTo(h, Anim.EmphasizedDecel)
     }
 
     function selectCurrent() {
@@ -311,7 +309,8 @@ PanelWindow {
         id: contentWrapper
         anchors.bottom: parent.bottom
         width: parent.width
-        height: root.fullHeight
+        height: root.animHeight
+        clip: true
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -375,7 +374,6 @@ PanelWindow {
             anchors.bottom: parent.bottom
             height: root.inputHeight
             opacity: root.contentOpacity
-            transform: Translate { y: root.searchSlide }
 
             Rectangle {
                 anchors.fill: parent
