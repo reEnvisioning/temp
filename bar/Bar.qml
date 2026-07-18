@@ -192,8 +192,8 @@ PanelWindow {
 
         Rectangle {
             anchors.top: tabRow.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width * root.widthScaleAnim
             height: Math.round(1 * root.uiScale)
             color: root.colors.divider
         }
