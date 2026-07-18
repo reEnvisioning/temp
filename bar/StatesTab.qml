@@ -72,8 +72,8 @@ Item {
     }
 
     readonly property real gridMargin: Math.round(4)
-    readonly property real compactH: Math.round(56)
     readonly property real gap: Math.round(gridMargin / 2)
+    readonly property real compactH: Math.round((root.height - gridMargin * 2 - gap) / 2)
 
     GridLayout {
         anchors.fill: parent
