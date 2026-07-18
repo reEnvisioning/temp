@@ -32,12 +32,12 @@ Item {
 
     function save() {
         var json = JSON.stringify(root._history)
-        var delim = "HS" + Math.random().toString(36).substring(2, 10) + "EOF"
+        var tmpFile = settings.dataFile("shell-history.json.tmp")
+        var targetFile = settings.dataFile("shell-history.json")
         historySaver.command = ["sh", "-c",
-            "mkdir -p " + settings.dataFile("") + " && " +
-            "cat > " + settings.dataFile("shell-history.json") + " << '" + delim + "'\n" +
-            json + "\n" +
-            delim]
+            "mkdir -p \"" + settings.dataFile("") + "\" && " +
+            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > \"" + tmpFile + "\" && " +
+            "mv \"" + tmpFile + "\" \"" + targetFile + "\""]
         historySaver.running = false
         historySaver.running = true
     }

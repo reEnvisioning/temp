@@ -141,17 +141,25 @@ PanelWindow {
         glowAnim.start()
     }
 
+    property var _pendingRestartHandler: null
+
     function animateContentTo(to, type, delay) {
         contentFadeAnim.stop()
         contentFadeAnim.from = root.contentOpacity
         contentFadeAnim.to = to
         contentFadeAnim.type = type
         if (delay > 0) {
-            restartTimer.interval = delay
-            restartTimer.triggered.connect(function() {
+            if (root._pendingRestartHandler) {
+                restartTimer.triggered.disconnect(root._pendingRestartHandler)
+                root._pendingRestartHandler = null
+            }
+            root._pendingRestartHandler = function() {
                 contentFadeAnim.start()
-                restartTimer.triggered.disconnect(arguments.callee)
-            })
+                restartTimer.triggered.disconnect(root._pendingRestartHandler)
+                root._pendingRestartHandler = null
+            }
+            restartTimer.interval = delay
+            restartTimer.triggered.connect(root._pendingRestartHandler)
             restartTimer.start()
         } else {
             contentFadeAnim.start()

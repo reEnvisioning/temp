@@ -32,12 +32,12 @@ Item {
 
     function save() {
         var json = JSON.stringify(root._history)
-        var delim = "TS" + Math.random().toString(36).substring(2, 10) + "EOF"
+        var tmpFile = settings.dataFile("terminal-history.json.tmp")
+        var targetFile = settings.dataFile("terminal-history.json")
         historySaver.command = ["sh", "-c",
-            "mkdir -p " + settings.dataFile("") + " && " +
-            "cat > " + settings.dataFile("terminal-history.json") + " << '" + delim + "'\n" +
-            json + "\n" +
-            delim]
+            "mkdir -p \"" + settings.dataFile("") + "\" && " +
+            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > \"" + tmpFile + "\" && " +
+            "mv \"" + tmpFile + "\" \"" + targetFile + "\""]
         historySaver.running = false
         historySaver.running = true
     }
@@ -84,7 +84,7 @@ Item {
             if (_history.length > 10) _history.length = 10
             save()
 
-            Quickshell.execDetached({ command: ["kitty", "-e", "sh", "-c", entry.command] })
+            Quickshell.execDetached({ command: [root._settings.terminalCommand(), "-e", "sh", "-c", entry.command] })
         }
     }
 

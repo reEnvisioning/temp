@@ -1,22 +1,26 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
+import qs.lib
 
 Item {
     id: root
     visible: false
+
+    readonly property Settings settings: Settings {}
 
     property string prefix: "@ "
     property string name: "System"
     property string placeholderText: "System action..."
 
     property var _actions: [
-        { id: "shutdown", cmd: "systemctl poweroff" },
-        { id: "reboot",   cmd: "systemctl reboot" },
+        { id: "shutdown", cmd: "loginctl poweroff" },
+        { id: "reboot",   cmd: "loginctl reboot" },
         { id: "logout",   cmd: "loginctl terminate-user $USER" },
-        { id: "lock",     cmd: "swaylock -f" },
-        { id: "performance", cmd: "powerprofile performance" },
-        { id: "balanced",    cmd: "powerprofile balanced" },
-        { id: "powersave",   cmd: "powerprofile power-saver" }
+        { id: "lock",     cmd: "sh -c 'command -v swaylock >/dev/null 2>&1 && swaylock -f || echo no-lock-command'" },
+        { id: "performance", cmd: "sh -c 'command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set performance || echo no-powerprofilesctl'" },
+        { id: "balanced",    cmd: "sh -c 'command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set balanced || echo no-powerprofilesctl'" },
+        { id: "powersave",   cmd: "sh -c 'command -v powerprofilesctl >/dev/null 2>&1 && powerprofilesctl set power-saver || echo no-powerprofilesctl'" }
     ]
 
     function query(text) {

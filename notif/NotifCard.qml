@@ -19,9 +19,7 @@ Item {
     property bool actionInvoked: false
     property bool actionBtnPressed: false
 
-    function updateFrom(notification) {
-        reused = true
-        actionInvoked = false
+    function copyFromNotification(notification) {
         try {
             var n = notification
             notifSummary = n.summary || ""
@@ -32,8 +30,14 @@ Item {
             notifHasImage = !!n.image
             if (n.actions) notifActions = n.actions
         } catch (e) {
-            console.log("NotifCard: update error", e)
+            console.log("NotifCard: copy error", e)
         }
+    }
+
+    function updateFrom(notification) {
+        reused = true
+        actionInvoked = false
+        copyFromNotification(notification)
         dismissTimer.restart()
     }
 
@@ -78,18 +82,8 @@ Item {
         opacityAnim.to = 1
         opacityAnim.type = Anim.EffectsSlow
         opacityAnim.start()
-        try {
-            var n = root.notif
-            notifSummary = n.summary || ""
-            notifBody = n.body || ""
-            notifAppName = n.appName || ""
-            notifUrgency = typeof n.urgency === "number" ? n.urgency : 1
-            notifExpireTimeout = typeof n.expireTimeout === "number" ? n.expireTimeout : -1
-            notifHasImage = !!n.image
-            if (n.actions) notifActions = n.actions
-        } catch (e) {
-            console.log("NotifCard: copy error", e)
-        }
+
+        copyFromNotification(root.notif)
     }
 
     function startExit(direction) {

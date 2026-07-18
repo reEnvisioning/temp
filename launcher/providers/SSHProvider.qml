@@ -32,12 +32,12 @@ Item {
 
     function save() {
         var json = JSON.stringify(root._history)
-        var delim = "SSH" + Math.random().toString(36).substring(2, 10) + "EOF"
+        var tmpFile = settings.dataFile("ssh-history.json.tmp")
+        var targetFile = settings.dataFile("ssh-history.json")
         historySaver.command = ["sh", "-c",
-            "mkdir -p " + settings.dataFile("") + " && " +
-            "cat > " + settings.dataFile("ssh-history.json") + " << '" + delim + "'\n" +
-            json + "\n" +
-            delim]
+            "mkdir -p \"" + settings.dataFile("") + "\" && " +
+            "printf '%s' '" + json.replace(/'/g, "'\\''") + "' > \"" + tmpFile + "\" && " +
+            "mv \"" + tmpFile + "\" \"" + targetFile + "\""]
         historySaver.running = false
         historySaver.running = true
     }
@@ -67,7 +67,7 @@ Item {
     function activate(entry) {
         if (entry && entry.input) {
             addToHistory(entry.input)
-            Quickshell.execDetached({ command: ["kitty", "-e", "bash", "-c", "ssh -v " + entry.input + "; exec bash -i"] })
+            Quickshell.execDetached({ command: [root._settings.terminalCommand(), "-e", "bash", "-c", "ssh -v " + entry.input + "; exec bash -i"] })
         }
     }
 
@@ -77,7 +77,7 @@ Item {
             var host = entry.input
             var atIdx = host.indexOf("@")
             if (atIdx >= 0) host = host.substring(atIdx + 1)
-            Quickshell.execDetached({ command: ["kitty", "-e", "sh", "-c", "ping " + host] })
+            Quickshell.execDetached({ command: [root._settings.terminalCommand(), "-e", "sh", "-c", "ping " + host] })
         }
     }
 

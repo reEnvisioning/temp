@@ -106,6 +106,10 @@
     "calc": true,
     "clipboard": true
   },
+  "external": {
+    "terminal": "kitty",
+    "share": "localsend_app send"
+  },
   "providerPrefixes": {
     "app": "",
     "shell": "\u003e ",
