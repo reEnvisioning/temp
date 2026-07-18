@@ -84,7 +84,7 @@ Item {
             if (_history.length > 10) _history.length = 10
             save()
 
-            Quickshell.execDetached({ command: [root._settings.terminalCommand(), "-e", "sh", "-c", entry.command] })
+            Quickshell.execDetached({ command: ["kitty", "-e", "sh", "-c", entry.command] })
         }
     }
 

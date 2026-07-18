@@ -2,13 +2,10 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import "../scripts/fuzzy.js" as Fuzzy
-import qs.lib
 
 Item {
     id: root
     visible: false
-
-    readonly property Settings settings: Settings {}
 
     property string prefix: "^ "
     property string name: "Share"
@@ -101,9 +98,8 @@ Item {
 
     function activate(entry) {
         if (!entry) return
-        var cmd = root.settings.shareCommand()
         Quickshell.execDetached(["bash", "-c",
-            cmd + " \"$HOME/$1\"",
+            "localsend_app send \"$HOME/$1\"",
             "shareFile", entry.relPath])
         root.currentDir = entry.parentDir
         Quickshell.execDetached(["bash", "-c",

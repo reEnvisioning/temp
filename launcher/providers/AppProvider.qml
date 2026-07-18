@@ -7,7 +7,7 @@ Item {
     id: root
     visible: false
 
-    property string prefix: ""
+    property string prefix: "! "
     property string name: "Apps"
     property string placeholderText: "Search applications..."
 
@@ -139,7 +139,7 @@ Item {
     function activate(entry) {
         if (entry && entry.exec) {
             if (entry.terminal === "true")
-                Quickshell.execDetached({ command: ["sh", "-c", root._settings.terminalCommand() + " -e " + entry.exec] })
+                Quickshell.execDetached({ command: ["sh", "-c", "kitty -e " + entry.exec] })
             else
                 Quickshell.execDetached({ command: ["sh", "-c", entry.exec] })
         }

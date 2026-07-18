@@ -30,7 +30,6 @@ Item {
             property var defaults: ({})
             property var modules: ({})
             property var launcherProviders: ({})
-            property var external: ({})
         }
     }
 
@@ -41,7 +40,6 @@ Item {
         if (s.launcherProviders !== undefined) root._launcherProviders = s.launcherProviders
         if (s.themePath !== undefined) root._themePath = s.themePath
         if (s.dataPath !== undefined) root._dataPath = s.dataPath
-        if (s.external !== undefined) root._external = s.external
     }
 
     // ── Resolved, cached values ────────────────────────────────────────────
@@ -51,7 +49,6 @@ Item {
     property var _defaults: ({})
     property var _modules: ({})
     property var _launcherProviders: ({})
-    property var _external: ({})
 
     readonly property string themePath: resolve(_themePath)
     readonly property string dataPath: resolve(_dataPath)
@@ -59,7 +56,6 @@ Item {
     readonly property var defaults: _defaults
     readonly property var modules: _modules
     readonly property var launcherProviders: _launcherProviders
-    readonly property var external: _external
 
     // ── Helpers ────────────────────────────────────────────────────────────
     function resolve(p: string): string {
@@ -89,13 +85,5 @@ Item {
 
     function providerEnabled(key: string): bool {
         return _launcherProviders[key] === true
-    }
-
-    function terminalCommand(): string {
-        return _external.terminal || "kitty"
-    }
-
-    function shareCommand(): string {
-        return _external.share || "localsend_app send"
     }
 }
