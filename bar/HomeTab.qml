@@ -19,7 +19,6 @@ Item {
 
     readonly property real gridMargin: Math.round(4)
     readonly property real gap: Math.round(gridMargin / 2)
-    readonly property real sideRowH: Math.round((contentH - gap) / 2)
     readonly property real contentW: root.width - gridMargin * 2
     readonly property real contentH: root.height - gridMargin * 2
     readonly property real avatarW: Math.round((contentW - gap) * 2 / 3)
