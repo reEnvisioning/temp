@@ -18,10 +18,8 @@ PanelWindow {
     property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
     property real animHeight: 0
-    property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
-    property real slideY: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -37,10 +35,7 @@ PanelWindow {
 
     property list<QtObject> providers: []
 
-    Component.onCompleted: {
-        root.slideY = root.screen.height
-        rebuildProviders()
-    }
+    Component.onCompleted: rebuildProviders()
 
     Component { id: appProvCmp; AppProvider {} }
     Component { id: shellProvCmp; ShellProvider {} }
@@ -90,8 +85,8 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight
-    visible: true
+    implicitHeight: root.animHeight
+    visible: root.animHeight > 0
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -99,17 +94,17 @@ PanelWindow {
     WlrLayershell.namespace: "launcher"
     anchors.bottom: true
     margins {
-        bottom: Math.round(8 * root.uiScale) - root.slideY
+        bottom: Math.round(8 * root.uiScale)
         left: Math.round((root.screen.width - root.panelWidth) / 2)
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
+    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
-    Anim { id: slideAnim; target: root; property: "slideY"; type: Anim.SpatialDefault }
 
     Connections {
-        target: slideAnim
+        target: heightAnim
         function onFinished() {
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
@@ -117,6 +112,14 @@ PanelWindow {
                 pending.provider.activate(pending.entry)
             }
         }
+    }
+
+    function animateTo(h, type) {
+        heightAnim.stop()
+        heightAnim.from = root.animHeight
+        heightAnim.to = h
+        heightAnim.type = type
+        heightAnim.start()
     }
 
     function animateGlowTo(to, type) {
@@ -214,13 +217,9 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
+        animateTo(0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
-        slideAnim.stop()
-        slideAnim.from = root.slideY
-        slideAnim.to = root.screen.height
-        slideAnim.type = Anim.StandardAccel
-        slideAnim.start()
     }
 
     function resetState() {
@@ -232,14 +231,10 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        root.animHeight = root.inputHeight + root.computeListHeight()
+        var targetH = root.inputHeight + root.computeListHeight()
+        animateTo(targetH, Anim.Bounce)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
-        slideAnim.stop()
-        slideAnim.from = root.slideY
-        slideAnim.to = 0
-        slideAnim.type = Anim.Bounce
-        slideAnim.start()
     }
 
     function processInput(text) {
@@ -272,7 +267,9 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        root.animHeight = root.inputHeight + root.computeListHeight()
+        var h = root.inputHeight + root.computeListHeight()
+        if (h === root.animHeight) return
+        animateTo(h, Anim.EmphasizedDecel)
     }
 
     function selectCurrent() {
@@ -329,12 +326,6 @@ PanelWindow {
             anchors.fill: parent
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
-
-            transform: Scale {
-                origin.y: contentWrapper.height
-                origin.x: root.panelWidth / 2
-                xScale: root.widthScaleAnim
-            }
 
             Behavior on color { CAnim {} }
         }
