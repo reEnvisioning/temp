@@ -20,6 +20,8 @@ PanelWindow {
     property real animHeight: 0
     property real contentOpacity: 0
     property real glowAlpha: 0
+    property real slideOffset: 0
+    property real cardScale: 1.0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -35,7 +37,11 @@ PanelWindow {
 
     property list<QtObject> providers: []
 
-    Component.onCompleted: rebuildProviders()
+    Component.onCompleted: {
+        root.slideOffset = root.fullHeight
+        root.cardScale = 0.95
+        rebuildProviders()
+    }
 
     Component { id: appProvCmp; AppProvider {} }
     Component { id: shellProvCmp; ShellProvider {} }
@@ -85,8 +91,8 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.animHeight
-    visible: root.animHeight > 0
+    implicitHeight: root.fullHeight
+    visible: true
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -99,12 +105,13 @@ PanelWindow {
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
-    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
+    Anim { id: slideAnim; target: root; property: "slideOffset"; type: Anim.SpatialDefault }
+    Anim { id: scaleAnim; target: root; property: "cardScale"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
     Connections {
-        target: heightAnim
+        target: slideAnim
         function onFinished() {
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
@@ -114,12 +121,12 @@ PanelWindow {
         }
     }
 
-    function animateTo(h, type) {
-        heightAnim.stop()
-        heightAnim.from = root.animHeight
-        heightAnim.to = h
-        heightAnim.type = type
-        heightAnim.start()
+    function animateTo(to, type) {
+        slideAnim.stop()
+        slideAnim.from = root.slideOffset
+        slideAnim.to = to
+        slideAnim.type = type
+        slideAnim.start()
     }
 
     function animateGlowTo(to, type) {
@@ -217,7 +224,12 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateTo(0, Anim.StandardAccel)
+        animateTo(root.fullHeight, Anim.StandardAccel)
+        scaleAnim.stop()
+        scaleAnim.from = root.cardScale
+        scaleAnim.to = 0.95
+        scaleAnim.type = Anim.StandardAccel
+        scaleAnim.start()
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
     }
@@ -231,8 +243,13 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        var targetH = root.inputHeight + root.computeListHeight()
-        animateTo(targetH, Anim.Bounce)
+        root.animHeight = root.inputHeight + root.computeListHeight()
+        animateTo(0, Anim.Bounce)
+        scaleAnim.stop()
+        scaleAnim.from = root.cardScale
+        scaleAnim.to = 1.0
+        scaleAnim.type = Anim.Bounce
+        scaleAnim.start()
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
     }
@@ -267,9 +284,7 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        var h = root.inputHeight + root.computeListHeight()
-        if (h === root.animHeight) return
-        animateTo(h, Anim.EmphasizedDecel)
+        root.animHeight = root.inputHeight + root.computeListHeight()
     }
 
     function selectCurrent() {
@@ -309,8 +324,18 @@ PanelWindow {
         id: contentWrapper
         anchors.bottom: parent.bottom
         width: parent.width
-        height: root.animHeight
+        height: root.fullHeight
         clip: true
+
+        transform: [
+            Scale {
+                origin.x: root.panelWidth / 2
+                origin.y: contentWrapper.height
+                xScale: root.cardScale
+                yScale: root.cardScale
+            },
+            Translate { y: root.slideOffset }
+        ]
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
