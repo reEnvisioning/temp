@@ -51,6 +51,9 @@ PanelWindow {
         glowAnim.to = root.isExpanded ? 1 : 0
         glowAnim.type = root.isExpanded ? Anim.EffectsDefault : Anim.EffectsFast
         glowAnim.start()
+
+        if (!root.isExpanded)
+            monitorTab.expandedCard = ""
     }
 
     onActiveTabChanged: {
@@ -227,6 +230,7 @@ PanelWindow {
             }
 
             MonitorTab {
+                id: monitorTab
                 anchors.fill: parent
                 anchors.margins: Math.round(8 * root.uiScale)
                 opacity: root.activeTab === 2 ? 1 : 0
