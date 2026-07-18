@@ -21,6 +21,7 @@ PanelWindow {
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
+    property real slideY: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
 
@@ -36,7 +37,10 @@ PanelWindow {
 
     property list<QtObject> providers: []
 
-    Component.onCompleted: rebuildProviders()
+    Component.onCompleted: {
+        root.slideY = root.screen.height
+        rebuildProviders()
+    }
 
     Component { id: appProvCmp; AppProvider {} }
     Component { id: shellProvCmp; ShellProvider {} }
@@ -95,7 +99,7 @@ PanelWindow {
     WlrLayershell.namespace: "launcher"
     anchors.bottom: true
     margins {
-        bottom: Math.round(8 * root.uiScale)
+        bottom: Math.round(8 * root.uiScale) - root.slideY
         left: Math.round((root.screen.width - root.panelWidth) / 2)
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
@@ -104,6 +108,7 @@ PanelWindow {
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
+    Anim { id: slideAnim; target: root; property: "slideY"; type: Anim.SpatialDefault }
 
     Connections {
         target: heightAnim
@@ -232,6 +237,11 @@ PanelWindow {
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
+        slideAnim.stop()
+        slideAnim.from = root.slideY
+        slideAnim.to = root.screen.height
+        slideAnim.type = Anim.StandardAccel
+        slideAnim.start()
     }
 
     function resetState() {
@@ -248,6 +258,11 @@ PanelWindow {
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
+        slideAnim.stop()
+        slideAnim.from = root.slideY
+        slideAnim.to = 0
+        slideAnim.type = Anim.SpatialDefault
+        slideAnim.start()
     }
 
     function processInput(text) {
