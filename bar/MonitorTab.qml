@@ -20,7 +20,7 @@ Item {
     property string expandedCard: ""
 
     readonly property real gridMargin: Math.round(4)
-    readonly property real gap: Math.round(gridMargin / 2)
+    readonly property real gap: gridMargin
     readonly property real compactH: Math.round((root.height - gridMargin * 2 - gap) / 2)
     readonly property real compactW: root.width > gridMargin * 2 + gap ? (root.width - gridMargin * 2 - gap) / 2 : 0
 
