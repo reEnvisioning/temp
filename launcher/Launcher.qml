@@ -18,7 +18,7 @@ PanelWindow {
     property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
     property real animHeight: 0
-    property real slideOffset: root.inputHeight + Math.round(8 * root.uiScale)
+    property real bottomMargin: 0
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
@@ -88,7 +88,7 @@ PanelWindow {
 
     implicitWidth: root.panelWidth
     implicitHeight: root.animHeight
-    visible: root.slideOffset < (root.inputHeight + Math.round(8 * root.uiScale))
+    visible: root.animHeight > 0
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -96,13 +96,13 @@ PanelWindow {
     WlrLayershell.namespace: "launcher"
     anchors.bottom: true
     margins {
-        bottom: Math.round(8 * root.uiScale)
+        bottom: root.bottomMargin
         left: Math.round((root.screen.width - root.panelWidth) / 2)
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
     Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
-    Anim { id: slideAnim; target: root; property: "slideOffset"; type: Anim.SpatialDefault }
+    Anim { id: slideAnim; target: root; property: "bottomMargin"; type: Anim.SpatialDefault }
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
@@ -130,7 +130,7 @@ PanelWindow {
     function animateSlideTo(to, type) {
         if (to === slideAnim.to && slideAnim.running) return
         slideAnim.stop()
-        slideAnim.from = root.slideOffset
+        slideAnim.from = root.bottomMargin
         slideAnim.to = to
         slideAnim.type = type
         slideAnim.start()
@@ -239,7 +239,8 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateSlideTo(root.inputHeight + Math.round(8 * root.uiScale), Anim.StandardAccel)
+        var h = root.animHeight
+        animateSlideTo(-(h + 8), Anim.StandardAccel)
         animateTo(0, Anim.StandardAccel)
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
@@ -256,12 +257,14 @@ PanelWindow {
         inputField.text = ""
         rebuildItems()
         var targetH = root.inputHeight + root.computeListHeight()
-        // Set height instantly so window is tall enough for the slide
         root.animHeight = targetH
-        animateSlideTo(0, Anim.SpatialDefault)
-        animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
-        animateGlowTo(1, Anim.EffectsDefault)
-        animateContentTo(1, Anim.EffectsSlow, 300)
+        root.bottomMargin = -(targetH + 8)
+        Qt.callLater(function() {
+            animateSlideTo(8, Anim.SpatialDefault)
+            animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
+            animateGlowTo(1, Anim.EffectsDefault)
+            animateContentTo(1, Anim.EffectsSlow, 300)
+        })
     }
 
     function processInput(text) {
@@ -407,8 +410,6 @@ PanelWindow {
             anchors.bottom: parent.bottom
             height: root.inputHeight
             opacity: root.contentOpacity
-
-            transform: Translate { y: root.slideOffset }
 
             Rectangle {
                 anchors.fill: parent
