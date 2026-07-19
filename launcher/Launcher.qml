@@ -87,8 +87,8 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.animHeight + root.slideOffset
-    visible: root.animHeight > 0
+    implicitHeight: root.animHeight
+    visible: root.slideOffset < (root.inputHeight + Math.round(8 * root.uiScale))
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -239,8 +239,8 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateTo(0, Anim.StandardAccel)
         animateSlideTo(root.inputHeight + Math.round(8 * root.uiScale), Anim.StandardAccel)
+        animateTo(0, Anim.StandardAccel)
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
@@ -256,8 +256,9 @@ PanelWindow {
         inputField.text = ""
         rebuildItems()
         var targetH = root.inputHeight + root.computeListHeight()
+        // Set height instantly so window is tall enough for the slide
+        root.animHeight = targetH
         animateSlideTo(0, Anim.SpatialDefault)
-        animateTo(targetH, Anim.SpatialDefault)
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
@@ -335,10 +336,8 @@ PanelWindow {
         id: contentWrapper
         anchors.bottom: parent.bottom
         width: parent.width
-        height: root.animHeight + root.slideOffset
+        height: root.animHeight
         clip: true
-
-        transform: Translate { y: root.slideOffset }
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
@@ -408,6 +407,8 @@ PanelWindow {
             anchors.bottom: parent.bottom
             height: root.inputHeight
             opacity: root.contentOpacity
+
+            transform: Translate { y: root.slideOffset }
 
             Rectangle {
                 anchors.fill: parent
