@@ -17,7 +17,8 @@ PanelWindow {
     property real emptyListHeight: Math.round(44 * root.uiScale)
     property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
-    property real slideOffset: root.fullHeight
+    property real animHeight: 0
+    property real slideOffset: root.inputHeight + Math.round(8 * root.uiScale)
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
@@ -86,8 +87,8 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight + Math.round(40 * root.uiScale)
-    visible: root.slideOffset < root.fullHeight
+    implicitHeight: root.animHeight + root.slideOffset
+    visible: root.animHeight > 0
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -95,18 +96,19 @@ PanelWindow {
     WlrLayershell.namespace: "launcher"
     anchors.bottom: true
     margins {
-        bottom: -Math.round(32 * root.uiScale)
+        bottom: Math.round(8 * root.uiScale)
         left: Math.round((root.screen.width - root.panelWidth) / 2)
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
+    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
     Anim { id: slideAnim; target: root; property: "slideOffset"; type: Anim.SpatialDefault }
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
     Connections {
-        target: slideAnim
+        target: heightAnim
         function onFinished() {
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
@@ -114,6 +116,15 @@ PanelWindow {
                 pending.provider.activate(pending.entry)
             }
         }
+    }
+
+    function animateTo(h, type) {
+        if (h === heightAnim.to && heightAnim.running) return
+        heightAnim.stop()
+        heightAnim.from = root.animHeight
+        heightAnim.to = h
+        heightAnim.type = type
+        heightAnim.start()
     }
 
     function animateSlideTo(to, type) {
@@ -228,7 +239,8 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateSlideTo(root.fullHeight, Anim.StandardAccel)
+        animateTo(0, Anim.StandardAccel)
+        animateSlideTo(root.inputHeight + Math.round(8 * root.uiScale), Anim.StandardAccel)
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
@@ -243,7 +255,9 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
+        var targetH = root.inputHeight + root.computeListHeight()
         animateSlideTo(0, Anim.SpatialDefault)
+        animateTo(targetH, Anim.SpatialDefault)
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
@@ -279,7 +293,9 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        // no-op: panel has fixed fullHeight; content area clips internally
+        var h = root.inputHeight + root.computeListHeight()
+        if (h === root.animHeight) return
+        animateTo(h, Anim.EmphasizedDecel)
     }
 
     function selectCurrent() {
@@ -319,7 +335,7 @@ PanelWindow {
         id: contentWrapper
         anchors.bottom: parent.bottom
         width: parent.width
-        height: root.fullHeight
+        height: root.animHeight + root.slideOffset
         clip: true
 
         transform: Translate { y: root.slideOffset }
