@@ -15,7 +15,6 @@ PanelWindow {
     property real inputHeight: Math.round(40 * root.uiScale)
     property real itemHeight: Math.round(44 * root.uiScale)
     property real emptyListHeight: Math.round(44 * root.uiScale)
-    property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
     property real translateY: 0
     property real resultHeight: 0
@@ -89,7 +88,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight
+    implicitHeight: root.inputHeight + root.resultHeight + Math.round(5 * root.uiScale)
     visible: root._isVisible
     color: "transparent"
     focusable: true
