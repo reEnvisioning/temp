@@ -342,7 +342,6 @@ PanelWindow {
         anchors.bottom: parent.bottom
         width: parent.width
         height: root.inputHeight + root.resultHeight + Math.round(5 * root.uiScale)
-        clip: true
 
         Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
