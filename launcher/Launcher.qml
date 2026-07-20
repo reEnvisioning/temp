@@ -17,12 +17,15 @@ PanelWindow {
     property real emptyListHeight: Math.round(44 * root.uiScale)
     property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
-    property real animHeight: 0
+    property real translateY: 0
+    property real resultHeight: 0
+    property bool _isVisible: false
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
+    readonly property real offScreenY: root.inputHeight + Math.round(8 * root.uiScale)
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
@@ -87,7 +90,7 @@ PanelWindow {
 
     implicitWidth: root.panelWidth
     implicitHeight: root.fullHeight
-    visible: root.animHeight > 0
+    visible: root._isVisible
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -100,14 +103,16 @@ PanelWindow {
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
-    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
+    Anim { id: slideAnim; target: root; property: "translateY"; type: Anim.SpatialDefault }
+    Anim { id: resultAnim; target: root; property: "resultHeight"; type: Anim.EmphasizedDecel }
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
     Connections {
-        target: heightAnim
+        target: slideAnim
         function onFinished() {
+            if (!root.isOpen) root._isVisible = false
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
                 root._pendingActivate = null
@@ -116,13 +121,22 @@ PanelWindow {
         }
     }
 
-    function animateTo(h, type) {
-        if (h === heightAnim.to && heightAnim.running) return
-        heightAnim.stop()
-        heightAnim.from = root.animHeight
-        heightAnim.to = h
-        heightAnim.type = type
-        heightAnim.start()
+    function animateSlideTo(to, type) {
+        if (to === slideAnim.to && slideAnim.running) return
+        slideAnim.stop()
+        slideAnim.from = root.translateY
+        slideAnim.to = to
+        slideAnim.type = type
+        slideAnim.start()
+    }
+
+    function animateResultTo(to, type) {
+        if (to === resultAnim.to && resultAnim.running) return
+        resultAnim.stop()
+        resultAnim.from = root.resultHeight
+        resultAnim.to = to
+        resultAnim.type = type
+        resultAnim.start()
     }
 
     function animateWidthTo(from, to, type) {
@@ -209,6 +223,7 @@ PanelWindow {
     function open() {
         if (!root.isOpen)
             root.isOpen = true
+        root._isVisible = true
         resetState()
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
@@ -216,6 +231,7 @@ PanelWindow {
     function openWithPrefix(pre) {
         if (!root.isOpen)
             root.isOpen = true
+        root._isVisible = true
         resetState()
         inputField.text = pre
         Qt.callLater(function() { inputField.forceActiveFocus() })
@@ -228,7 +244,8 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateTo(0, Anim.StandardAccel)
+        animateSlideTo(root.offScreenY, Anim.StandardAccel)
+        animateResultTo(0, Anim.StandardAccel)
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
@@ -243,8 +260,10 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        var targetH = root.inputHeight + root.computeListHeight()
-        animateTo(targetH, Anim.SpatialDefault)
+        root.resultHeight = 0
+        root.translateY = root.offScreenY
+        animateSlideTo(0, Anim.SpatialDefault)
+        animateResultTo(root.computeListHeight(), Anim.SpatialDefault)
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
@@ -265,7 +284,7 @@ PanelWindow {
                 root.results = p.query(root.queryText)
                 root._pendingCleanup = false
                 rebuildItems()
-                updateTargetHeight()
+                updateResultHeight()
                 return
             }
         }
@@ -275,14 +294,14 @@ PanelWindow {
             root.results = []
             root._pendingCleanup = false
             rebuildItems()
-            updateTargetHeight()
+            updateResultHeight()
         }
     }
 
-    function updateTargetHeight() {
-        var h = root.inputHeight + root.computeListHeight()
-        if (h === root.animHeight) return
-        animateTo(h, Anim.EmphasizedDecel)
+    function updateResultHeight() {
+        var h = root.computeListHeight()
+        if (h === root.resultHeight) return
+        animateResultTo(h, Anim.EmphasizedDecel)
     }
 
     function selectCurrent() {
@@ -322,7 +341,7 @@ PanelWindow {
         id: contentWrapper
         anchors.bottom: parent.bottom
         width: parent.width
-        height: root.animHeight
+        height: root.inputHeight + root.resultHeight + Math.round(5 * root.uiScale)
         clip: true
 
         Rectangle {
@@ -393,6 +412,7 @@ PanelWindow {
             anchors.bottom: parent.bottom
             height: root.inputHeight
             opacity: root.contentOpacity
+            transform: Translate { y: root.translateY }
 
             Rectangle {
                 anchors.fill: parent
@@ -472,7 +492,7 @@ PanelWindow {
                                 root._pendingCleanup = false
                                 inputField.text = ""
                                 rebuildItems()
-                                updateTargetHeight()
+                                updateResultHeight()
                             } else {
                                 close()
                             }
