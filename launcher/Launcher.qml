@@ -359,11 +359,14 @@ PanelWindow {
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
 
-            transform: Scale {
-                origin.y: contentWrapper.height
-                origin.x: root.panelWidth / 2
-                xScale: root.widthScaleAnim
-            }
+            transform: [
+                Scale {
+                    origin.y: contentWrapper.height
+                    origin.x: root.panelWidth / 2
+                    xScale: root.widthScaleAnim
+                },
+                Translate { y: root.translateY }
+            ]
 
             Behavior on color { CAnim {} }
         }
