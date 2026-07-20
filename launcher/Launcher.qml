@@ -15,16 +15,14 @@ PanelWindow {
     property real inputHeight: Math.round(40 * root.uiScale)
     property real itemHeight: Math.round(44 * root.uiScale)
     property real emptyListHeight: Math.round(44 * root.uiScale)
+    property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
-    property real translateY: 0
-    property real resultHeight: 0
-    property bool _isVisible: false
+    property real animHeight: 0
     property real widthScaleAnim: 1.0
     property real contentOpacity: 0
     property real glowAlpha: 0
     property bool _pendingCleanup: false
     property var _pendingActivate: null
-    readonly property real offScreenY: root.inputHeight + Math.round(8 * root.uiScale)
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
@@ -88,8 +86,8 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: Math.round(root.screen.height / 3)
-    visible: root._isVisible
+    implicitHeight: root.fullHeight
+    visible: root.animHeight > 0
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -102,16 +100,14 @@ PanelWindow {
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
 
-    Anim { id: slideAnim; target: root; property: "translateY"; type: Anim.SpatialDefault }
-    Anim { id: resultAnim; target: root; property: "resultHeight"; type: Anim.EmphasizedDecel }
+    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
     Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
     Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
     Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
 
     Connections {
-        target: slideAnim
+        target: heightAnim
         function onFinished() {
-            if (!root.isOpen) root._isVisible = false
             if (root._pendingActivate) {
                 var pending = root._pendingActivate
                 root._pendingActivate = null
@@ -120,22 +116,13 @@ PanelWindow {
         }
     }
 
-    function animateSlideTo(to, type) {
-        if (to === slideAnim.to && slideAnim.running) return
-        slideAnim.stop()
-        slideAnim.from = root.translateY
-        slideAnim.to = to
-        slideAnim.type = type
-        slideAnim.start()
-    }
-
-    function animateResultTo(to, type) {
-        if (to === resultAnim.to && resultAnim.running) return
-        resultAnim.stop()
-        resultAnim.from = root.resultHeight
-        resultAnim.to = to
-        resultAnim.type = type
-        resultAnim.start()
+    function animateTo(h, type) {
+        if (h === heightAnim.to && heightAnim.running) return
+        heightAnim.stop()
+        heightAnim.from = root.animHeight
+        heightAnim.to = h
+        heightAnim.type = type
+        heightAnim.start()
     }
 
     function animateWidthTo(from, to, type) {
@@ -222,7 +209,6 @@ PanelWindow {
     function open() {
         if (!root.isOpen)
             root.isOpen = true
-        root._isVisible = true
         resetState()
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
@@ -230,7 +216,6 @@ PanelWindow {
     function openWithPrefix(pre) {
         if (!root.isOpen)
             root.isOpen = true
-        root._isVisible = true
         resetState()
         inputField.text = pre
         Qt.callLater(function() { inputField.forceActiveFocus() })
@@ -243,8 +228,7 @@ PanelWindow {
         root.currentIndex = 0
         root._pendingCleanup = false
         rebuildItems()
-        animateSlideTo(root.offScreenY, Anim.StandardAccel)
-        animateResultTo(0, Anim.StandardAccel)
+        animateTo(0, Anim.StandardAccel)
         animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
         animateGlowTo(0, Anim.EffectsFast)
         animateContentTo(0, Anim.EffectsFast, 0)
@@ -259,10 +243,8 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        root.resultHeight = 0
-        root.translateY = root.offScreenY
-        animateSlideTo(0, Anim.SpatialDefault)
-        animateResultTo(root.computeListHeight(), Anim.SpatialDefault)
+        var targetH = root.inputHeight + root.computeListHeight()
+        animateTo(targetH, Anim.SpatialDefault)
         animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
         animateGlowTo(1, Anim.EffectsDefault)
         animateContentTo(1, Anim.EffectsSlow, 300)
@@ -283,7 +265,7 @@ PanelWindow {
                 root.results = p.query(root.queryText)
                 root._pendingCleanup = false
                 rebuildItems()
-                updateResultHeight()
+                updateTargetHeight()
                 return
             }
         }
@@ -293,14 +275,14 @@ PanelWindow {
             root.results = []
             root._pendingCleanup = false
             rebuildItems()
-            updateResultHeight()
+            updateTargetHeight()
         }
     }
 
-    function updateResultHeight() {
-        var h = root.computeListHeight()
-        if (h === root.resultHeight) return
-        animateResultTo(h, Anim.EmphasizedDecel)
+    function updateTargetHeight() {
+        var h = root.inputHeight + root.computeListHeight()
+        if (h === root.animHeight) return
+        animateTo(h, Anim.EmphasizedDecel)
     }
 
     function selectCurrent() {
@@ -336,24 +318,22 @@ PanelWindow {
             resultFlick.contentY = y + root.itemHeight - resultFlick.height
     }
 
-    Rectangle {
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: parent.bottom
-        width: parent.width * (1.2 + root.glowAlpha * 0.3)
-        height: parent.height * 1.2
-        radius: width * 0.5
-        color: Qt.rgba(1, 1, 1, 0.03 * root.glowAlpha)
-        visible: root.glowAlpha > 0.01
-    }
-
     Item {
-        id: container
-        anchors.left: parent.left
-        anchors.right: parent.right
+        id: contentWrapper
         anchors.bottom: parent.bottom
-        height: root.inputHeight + root.resultHeight + Math.round(13 * root.uiScale)
-        transform: Translate { y: root.translateY }
+        width: parent.width
+        height: root.animHeight
         clip: true
+
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottom: parent.bottom
+            width: parent.width * (1.2 + root.glowAlpha * 0.3)
+            height: parent.height * 1.2
+            radius: width * 0.5
+            color: Qt.rgba(1, 1, 1, 0.03 * root.glowAlpha)
+            visible: root.glowAlpha > 0.01
+        }
 
         Rectangle {
             anchors.fill: parent
@@ -361,7 +341,7 @@ PanelWindow {
             color: root.colors.background
 
             transform: Scale {
-                origin.y: parent.height
+                origin.y: contentWrapper.height
                 origin.x: root.panelWidth / 2
                 xScale: root.widthScaleAnim
             }
@@ -375,7 +355,8 @@ PanelWindow {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.topMargin: Math.round(4 * root.uiScale)
-            height: root.resultHeight
+            anchors.bottom: inputBar.top
+            anchors.bottomMargin: Math.round(1 * root.uiScale)
             clip: true
             opacity: root.contentOpacity
 
@@ -491,7 +472,7 @@ PanelWindow {
                                 root._pendingCleanup = false
                                 inputField.text = ""
                                 rebuildItems()
-                                updateResultHeight()
+                                updateTargetHeight()
                             } else {
                                 close()
                             }
