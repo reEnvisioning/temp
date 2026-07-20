@@ -346,207 +346,213 @@ PanelWindow {
         visible: root.glowAlpha > 0.01
     }
 
-    Rectangle {
-        anchors.fill: parent
-        radius: Math.round(6 * root.uiScale)
-        color: root.colors.background
+    Item {
+        id: container
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        height: root.inputHeight + root.resultHeight + Math.round(13 * root.uiScale)
+        transform: Translate { y: root.translateY }
+        clip: true
 
-        transform: [
-            Translate { y: root.translateY },
-            Scale {
+        Rectangle {
+            anchors.fill: parent
+            radius: Math.round(6 * root.uiScale)
+            color: root.colors.background
+
+            transform: Scale {
                 origin.y: parent.height
                 origin.x: root.panelWidth / 2
                 xScale: root.widthScaleAnim
             }
-        ]
 
-        Behavior on color { CAnim {} }
-    }
-
-    Item {
-        id: resultArea
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.top: parent.top
-        anchors.topMargin: Math.round(4 * root.uiScale)
-        height: root.resultHeight
-        clip: true
-        opacity: root.contentOpacity
-
-        Text {
-            anchors.centerIn: parent
-            text: "No results"
-            color: root.colors.subtext0
-            font.pointSize: 9
-            visible: root.activeProvider && root.queryText && root.results.length === 0
-        }
-
-        Flickable {
-            id: resultFlick
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
-            contentHeight: resultCol.height
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: root.results.length > 0
-            clip: true
-            visible: root.results.length > 0
-
-            Column {
-                id: resultCol
-                width: parent.width
-                spacing: Math.round(2 * root.uiScale)
-            }
-        }
-    }
-
-    Item {
-        id: inputBar
-        anchors.left: parent.left
-        anchors.right: parent.right
-        anchors.bottom: parent.bottom
-        height: root.inputHeight
-        opacity: root.contentOpacity
-        transform: Translate { y: root.translateY }
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
-            radius: Math.round(4 * root.uiScale)
-            color: "transparent"
-            border.width: 1
-            border.color: root.colors.border
+            Behavior on color { CAnim {} }
         }
 
         Item {
-            id: inputArea
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
+            id: resultArea
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.topMargin: Math.round(4 * root.uiScale)
+            height: root.resultHeight
+            clip: true
+            opacity: root.contentOpacity
 
-            TextInput {
-                id: inputField
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.left: parent.left
-                anchors.leftMargin: Math.round(12 * root.uiScale)
-                anchors.right: parent.right
-                anchors.rightMargin: Math.round(12 * root.uiScale)
-                color: root.colors.text
-                font.family: root.colors.fontFamily
-                font.pointSize: 10
-                clip: true
-                cursorVisible: true
-                cursorDelegate: Item {}
-
-                onTextChanged: root.processInput(text)
-
-                Keys.onPressed: function(event) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                        root.selectCurrent()
-                        event.accepted = true
-                    } else if (event.key === Qt.Key_Backspace && inputField.text === "") {
-                        root.close()
-                        event.accepted = true
-                    } else if ((event.key === Qt.Key_Tab || event.key === Qt.Key_Right) && root.activeProvider && root.results.length > 0) {
-                        if (event.key === Qt.Key_Right && inputField.cursorPosition < inputField.text.length) {
-                            return
-                        }
-                        var entry = root.results[root.currentIndex]
-                        inputField.text = root.activeProvider.prefix + root.activeProvider.textFor(entry)
-                        inputField.cursorPosition = inputField.text.length
-                        event.accepted = true
-                    } else if (event.key === Qt.Key_Up) {
-                        if (root.results.length > 0) {
-                            root.moveSel(-1)
-                            event.accepted = true
-                        }
-                    } else if (event.key === Qt.Key_Down) {
-                        if (root.results.length > 0) {
-                            root.moveSel(1)
-                            event.accepted = true
-                        }
-                    } else if (event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
-                        var prov = root.activeProvider
-                        if (typeof prov.remove !== "function") { return }
-                        if (event.modifiers & Qt.ShiftModifier) {
-                            prov.removeAll()
-                        } else {
-                            prov.remove(root.results[root.currentIndex])
-                        }
-                        root.processInput(inputField.text)
-                        event.accepted = true
-                    } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
-                        var prov = root.activeProvider
-                        if (typeof prov.altActivate !== "function") { return }
-                        prov.altActivate(root.results[root.currentIndex])
-                        root.processInput(inputField.text)
-                        event.accepted = true
-                    } else if (event.key === Qt.Key_Escape) {
-                        if (root.activeProvider || root.results.length > 0 || inputField.text !== "") {
-                            root.activeProvider = null
-                            root.results = []
-                            root._pendingCleanup = false
-                            inputField.text = ""
-                            rebuildItems()
-                            updateResultHeight()
-                        } else {
-                            close()
-                        }
-                        event.accepted = true
-                    }
-                }
+            Text {
+                anchors.centerIn: parent
+                text: "No results"
+                color: root.colors.subtext0
+                font.pointSize: 9
+                visible: root.activeProvider && root.queryText && root.results.length === 0
             }
 
-            Rectangle {
-                id: blockCursor
-                property var cursorRect: inputField.positionToRectangle(inputField.cursorPosition)
-                x: inputField.x + cursorRect.x
-                y: inputField.y + (inputField.height - height) / 2
-                width: Math.round(8 * root.uiScale)
-                height: inputField.height
-                radius: Math.round(1 * root.uiScale)
-                color: root.colors.accent
-                opacity: 0
-                visible: inputField.activeFocus
+            Flickable {
+                id: resultFlick
+                anchors.fill: parent
+                anchors.margins: Math.round(4 * root.uiScale)
+                contentHeight: resultCol.height
+                boundsBehavior: Flickable.StopAtBounds
+                interactive: root.results.length > 0
+                clip: true
+                visible: root.results.length > 0
 
-                Timer {
-                    id: cursorBlinkTimer
-                    interval: 530
-                    running: inputField.activeFocus
-                    repeat: true
-                    onTriggered: parent.opacity = (parent.opacity > 0 ? 0 : 0.6)
-                }
-
-                Connections {
-                    target: inputField
-                    function onTextChanged() {
-                        cursorBlinkTimer.restart()
-                        blockCursor.opacity = 0.6
-                    }
-                    function onCursorPositionChanged() {
-                        cursorBlinkTimer.restart()
-                        blockCursor.opacity = 0.6
-                    }
-                    function onActiveFocusChanged() {
-                        if (inputField.activeFocus) {
-                            cursorBlinkTimer.restart()
-                            blockCursor.opacity = 0.6
-                        } else {
-                            cursorBlinkTimer.stop()
-                            blockCursor.opacity = 0
-                        }
-                    }
+                Column {
+                    id: resultCol
+                    width: parent.width
+                    spacing: Math.round(2 * root.uiScale)
                 }
             }
         }
 
-        Text {
-            id: providerLabel
-            anchors.verticalCenter: parent.verticalCenter
+        Item {
+            id: inputBar
+            anchors.left: parent.left
             anchors.right: parent.right
-            anchors.rightMargin: Math.round(12 * root.uiScale)
-            text: root.activeProvider ? root.activeProvider.name : ""
-            color: root.colors.subtext0
-            font.pointSize: 8
-            visible: text !== ""
+            anchors.bottom: parent.bottom
+            height: root.inputHeight
+            opacity: root.contentOpacity
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: Math.round(4 * root.uiScale)
+                radius: Math.round(4 * root.uiScale)
+                color: "transparent"
+                border.width: 1
+                border.color: root.colors.border
+            }
+
+            Item {
+                id: inputArea
+                anchors.fill: parent
+                anchors.margins: Math.round(4 * root.uiScale)
+
+                TextInput {
+                    id: inputField
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: Math.round(12 * root.uiScale)
+                    anchors.right: parent.right
+                    anchors.rightMargin: Math.round(12 * root.uiScale)
+                    color: root.colors.text
+                    font.family: root.colors.fontFamily
+                    font.pointSize: 10
+                    clip: true
+                    cursorVisible: true
+                    cursorDelegate: Item {}
+
+                    onTextChanged: root.processInput(text)
+
+                    Keys.onPressed: function(event) {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            root.selectCurrent()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Backspace && inputField.text === "") {
+                            root.close()
+                            event.accepted = true
+                        } else if ((event.key === Qt.Key_Tab || event.key === Qt.Key_Right) && root.activeProvider && root.results.length > 0) {
+                            if (event.key === Qt.Key_Right && inputField.cursorPosition < inputField.text.length) {
+                                return
+                            }
+                            var entry = root.results[root.currentIndex]
+                            inputField.text = root.activeProvider.prefix + root.activeProvider.textFor(entry)
+                            inputField.cursorPosition = inputField.text.length
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            if (root.results.length > 0) {
+                                root.moveSel(-1)
+                                event.accepted = true
+                            }
+                        } else if (event.key === Qt.Key_Down) {
+                            if (root.results.length > 0) {
+                                root.moveSel(1)
+                                event.accepted = true
+                            }
+                        } else if (event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
+                            var prov = root.activeProvider
+                            if (typeof prov.remove !== "function") { return }
+                            if (event.modifiers & Qt.ShiftModifier) {
+                                prov.removeAll()
+                            } else {
+                                prov.remove(root.results[root.currentIndex])
+                            }
+                            root.processInput(inputField.text)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
+                            var prov = root.activeProvider
+                            if (typeof prov.altActivate !== "function") { return }
+                            prov.altActivate(root.results[root.currentIndex])
+                            root.processInput(inputField.text)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            if (root.activeProvider || root.results.length > 0 || inputField.text !== "") {
+                                root.activeProvider = null
+                                root.results = []
+                                root._pendingCleanup = false
+                                inputField.text = ""
+                                rebuildItems()
+                                updateResultHeight()
+                            } else {
+                                close()
+                            }
+                            event.accepted = true
+                        }
+                    }
+                }
+
+                Rectangle {
+                    id: blockCursor
+                    property var cursorRect: inputField.positionToRectangle(inputField.cursorPosition)
+                    x: inputField.x + cursorRect.x
+                    y: inputField.y + (inputField.height - height) / 2
+                    width: Math.round(8 * root.uiScale)
+                    height: inputField.height
+                    radius: Math.round(1 * root.uiScale)
+                    color: root.colors.accent
+                    opacity: 0
+                    visible: inputField.activeFocus
+
+                    Timer {
+                        id: cursorBlinkTimer
+                        interval: 530
+                        running: inputField.activeFocus
+                        repeat: true
+                        onTriggered: parent.opacity = (parent.opacity > 0 ? 0 : 0.6)
+                    }
+
+                    Connections {
+                        target: inputField
+                        function onTextChanged() {
+                            cursorBlinkTimer.restart()
+                            blockCursor.opacity = 0.6
+                        }
+                        function onCursorPositionChanged() {
+                            cursorBlinkTimer.restart()
+                            blockCursor.opacity = 0.6
+                        }
+                        function onActiveFocusChanged() {
+                            if (inputField.activeFocus) {
+                                cursorBlinkTimer.restart()
+                                blockCursor.opacity = 0.6
+                            } else {
+                                cursorBlinkTimer.stop()
+                                blockCursor.opacity = 0
+                            }
+                        }
+                    }
+                }
+            }
+
+            Text {
+                id: providerLabel
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.right: parent.right
+                anchors.rightMargin: Math.round(12 * root.uiScale)
+                text: root.activeProvider ? root.activeProvider.name : ""
+                color: root.colors.subtext0
+                font.pointSize: 8
+                visible: text !== ""
+            }
         }
     }
 
