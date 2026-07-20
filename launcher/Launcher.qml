@@ -88,7 +88,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth
-    implicitHeight: root.inputHeight + root.resultHeight + Math.round(5 * root.uiScale)
+    implicitHeight: Math.round(root.screen.height / 3)
     visible: root._isVisible
     color: "transparent"
     focusable: true
@@ -351,11 +351,14 @@ PanelWindow {
         radius: Math.round(6 * root.uiScale)
         color: root.colors.background
 
-        transform: Scale {
-            origin.y: parent.height
-            origin.x: root.panelWidth / 2
-            xScale: root.widthScaleAnim
-        }
+        transform: [
+            Translate { y: root.translateY },
+            Scale {
+                origin.y: parent.height
+                origin.x: root.panelWidth / 2
+                xScale: root.widthScaleAnim
+            }
+        ]
 
         Behavior on color { CAnim {} }
     }
