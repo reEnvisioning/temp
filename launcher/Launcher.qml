@@ -243,6 +243,51 @@ PanelWindow {
     }
 
     Item {
+        id: resultArea
+        anchors.bottom: inputBar.top
+        anchors.bottomMargin: -Math.round(6 * root.uiScale)
+        anchors.horizontalCenter: inputBar.horizontalCenter
+        width: root.panelWidth + root.resultWidthOffset
+        height: root.resultHeight
+        clip: true
+
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
+            anchors.bottomMargin: 0
+            radius: Math.round(6 * root.uiScale)
+            color: root.colors.background
+
+            Behavior on color { CAnim {} }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: "No results"
+            color: root.colors.subtext0
+            font.pointSize: 9
+            visible: root.activeProvider && root.queryText && root.results.length === 0
+        }
+
+        Flickable {
+            id: resultFlick
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
+            contentHeight: resultCol.height
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: root.results.length > 0
+            clip: true
+            visible: root.results.length > 0
+
+            Column {
+                id: resultCol
+                width: parent.width
+                spacing: Math.round(2 * root.uiScale)
+            }
+        }
+    }
+
+    Item {
         id: inputBar
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
@@ -395,51 +440,6 @@ PanelWindow {
             color: root.colors.subtext0
             font.pointSize: 8
             visible: text !== ""
-        }
-    }
-
-    Item {
-        id: resultArea
-        anchors.bottom: inputBar.top
-        anchors.bottomMargin: -Math.round(8 * root.uiScale)
-        anchors.horizontalCenter: inputBar.horizontalCenter
-        width: root.panelWidth + root.resultWidthOffset
-        height: root.resultHeight
-        clip: true
-
-        Rectangle {
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
-            anchors.bottomMargin: 0
-            radius: Math.round(6 * root.uiScale)
-            color: root.colors.background
-
-            Behavior on color { CAnim {} }
-        }
-
-        Text {
-            anchors.centerIn: parent
-            text: "No results"
-            color: root.colors.subtext0
-            font.pointSize: 9
-            visible: root.activeProvider && root.queryText && root.results.length === 0
-        }
-
-        Flickable {
-            id: resultFlick
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
-            contentHeight: resultCol.height
-            boundsBehavior: Flickable.StopAtBounds
-            interactive: root.results.length > 0
-            clip: true
-            visible: root.results.length > 0
-
-            Column {
-                id: resultCol
-                width: parent.width
-                spacing: Math.round(2 * root.uiScale)
-            }
         }
     }
 
