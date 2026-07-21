@@ -15,9 +15,9 @@ PanelWindow {
     property real inputHeight: Math.round(40 * root.uiScale)
     property real itemHeight: Math.round(44 * root.uiScale)
     property real emptyListHeight: Math.round(44 * root.uiScale)
-    property real fullHeight: Math.round(500 * root.uiScale)
+    property real resultHeight: 0
+    property real resultWidthOffset: Math.round(8 * root.uiScale)
     property bool isOpen: false
-    property real animHeight: 0
     property bool _pendingCleanup: false
 
     // Settings drives which providers are active. Keys must match
@@ -81,8 +81,8 @@ PanelWindow {
     property var results: []
     property int currentIndex: 0
 
-    implicitWidth: root.panelWidth
-    implicitHeight: root.fullHeight
+    implicitWidth: root.panelWidth + root.resultWidthOffset
+    implicitHeight: root.inputHeight + root.resultHeight
     visible: root.isOpen
     color: "transparent"
     focusable: true
@@ -92,12 +92,12 @@ PanelWindow {
     anchors.bottom: true
     margins {
         bottom: Math.round(8 * root.uiScale)
-        left: Math.round((root.screen.width - root.panelWidth) / 2)
-        right: Math.round((root.screen.width - root.panelWidth) / 2)
+        left: Math.round((root.screen.width - (root.panelWidth + root.resultWidthOffset)) / 2)
+        right: Math.round((root.screen.width - (root.panelWidth + root.resultWidthOffset)) / 2)
     }
 
     function computeMaxListHeight() {
-        return Math.round(root.screen.height / 3) - root.inputHeight - Math.round(13 * root.uiScale)
+        return Math.round(root.screen.height / 3)
     }
 
     function computeListHeight() {
@@ -163,7 +163,7 @@ PanelWindow {
         root.results = []
         root.currentIndex = 0
         root._pendingCleanup = false
-        root.animHeight = 0
+        root.resultHeight = 0
         rebuildItems()
     }
 
@@ -174,7 +174,7 @@ PanelWindow {
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        root.animHeight = root.inputHeight + root.computeListHeight()
+        root.resultHeight = root.computeListHeight()
     }
 
     function processInput(text) {
@@ -207,7 +207,7 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        root.animHeight = root.inputHeight + root.computeListHeight()
+        root.resultHeight = root.computeListHeight()
     }
 
     function selectCurrent() {
@@ -243,202 +243,193 @@ PanelWindow {
     }
 
     Item {
-        id: contentWrapper
+        id: inputBar
         anchors.bottom: parent.bottom
-        width: parent.width
-        height: root.animHeight
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: root.panelWidth
+        height: root.inputHeight
+
+        Rectangle {
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
+            radius: Math.round(4 * root.uiScale)
+            color: "transparent"
+            border.width: 1
+            border.color: root.colors.border
+        }
+
+        Item {
+            id: inputArea
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
+
+            TextInput {
+                id: inputField
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.left: parent.left
+                anchors.leftMargin: Math.round(12 * root.uiScale)
+                anchors.right: parent.right
+                anchors.rightMargin: Math.round(12 * root.uiScale)
+                color: root.colors.text
+                font.family: root.colors.fontFamily
+                font.pointSize: 10
+                clip: true
+                cursorVisible: true
+                cursorDelegate: Item {}
+
+                onTextChanged: root.processInput(text)
+
+                Keys.onPressed: function(event) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        root.selectCurrent()
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Backspace && inputField.text === "") {
+                        root.close()
+                        event.accepted = true
+                    } else if ((event.key === Qt.Key_Tab || event.key === Qt.Key_Right) && root.activeProvider && root.results.length > 0) {
+                        if (event.key === Qt.Key_Right && inputField.cursorPosition < inputField.text.length) {
+                            return
+                        }
+                        var entry = root.results[root.currentIndex]
+                        inputField.text = root.activeProvider.prefix + root.activeProvider.textFor(entry)
+                        inputField.cursorPosition = inputField.text.length
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Up) {
+                        if (root.results.length > 0) {
+                            root.moveSel(-1)
+                            event.accepted = true
+                        }
+                    } else if (event.key === Qt.Key_Down) {
+                        if (root.results.length > 0) {
+                            root.moveSel(1)
+                            event.accepted = true
+                        }
+                    } else if (event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
+                        var prov = root.activeProvider
+                        if (typeof prov.remove !== "function") { return }
+                        if (event.modifiers & Qt.ShiftModifier) {
+                            prov.removeAll()
+                        } else {
+                            prov.remove(root.results[root.currentIndex])
+                        }
+                        root.processInput(inputField.text)
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
+                        var prov = root.activeProvider
+                        if (typeof prov.altActivate !== "function") { return }
+                        prov.altActivate(root.results[root.currentIndex])
+                        root.processInput(inputField.text)
+                        event.accepted = true
+                    } else if (event.key === Qt.Key_Escape) {
+                        if (root.activeProvider || root.results.length > 0 || inputField.text !== "") {
+                            root.activeProvider = null
+                            root.results = []
+                            root._pendingCleanup = false
+                            inputField.text = ""
+                            rebuildItems()
+                            updateTargetHeight()
+                        } else {
+                            close()
+                        }
+                        event.accepted = true
+                    }
+                }
+            }
+
+            Rectangle {
+                id: blockCursor
+                property var cursorRect: inputField.positionToRectangle(inputField.cursorPosition)
+                x: inputField.x + cursorRect.x
+                y: inputField.y + (inputField.height - height) / 2
+                width: Math.round(8 * root.uiScale)
+                height: inputField.height
+                radius: Math.round(1 * root.uiScale)
+                color: root.colors.accent
+                opacity: 0
+                visible: inputField.activeFocus
+
+                Timer {
+                    id: cursorBlinkTimer
+                    interval: 530
+                    running: inputField.activeFocus
+                    repeat: true
+                    onTriggered: parent.opacity = (parent.opacity > 0 ? 0 : 0.6)
+                }
+
+                Connections {
+                    target: inputField
+                    function onTextChanged() {
+                        cursorBlinkTimer.restart()
+                        blockCursor.opacity = 0.6
+                    }
+                    function onCursorPositionChanged() {
+                        cursorBlinkTimer.restart()
+                        blockCursor.opacity = 0.6
+                    }
+                    function onActiveFocusChanged() {
+                        if (inputField.activeFocus) {
+                            cursorBlinkTimer.restart()
+                            blockCursor.opacity = 0.6
+                        } else {
+                            cursorBlinkTimer.stop()
+                            blockCursor.opacity = 0
+                        }
+                    }
+                }
+            }
+        }
+
+        Text {
+            id: providerLabel
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.right: parent.right
+            anchors.rightMargin: Math.round(12 * root.uiScale)
+            text: root.activeProvider ? root.activeProvider.name : ""
+            color: root.colors.subtext0
+            font.pointSize: 8
+            visible: text !== ""
+        }
+    }
+
+    Item {
+        id: resultArea
+        anchors.bottom: inputBar.top
+        anchors.horizontalCenter: inputBar.horizontalCenter
+        width: root.panelWidth + root.resultWidthOffset
+        height: root.resultHeight
         clip: true
 
         Rectangle {
             anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
 
             Behavior on color { CAnim {} }
         }
 
-        Item {
-            id: resultArea
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.topMargin: Math.round(4 * root.uiScale)
-            anchors.bottom: inputBar.top
-            anchors.bottomMargin: Math.round(1 * root.uiScale)
-            clip: true
-
-            Text {
-                anchors.centerIn: parent
-                text: "No results"
-                color: root.colors.subtext0
-                font.pointSize: 9
-                visible: root.activeProvider && root.queryText && root.results.length === 0
-            }
-
-            Flickable {
-                id: resultFlick
-                anchors.fill: parent
-                anchors.margins: Math.round(4 * root.uiScale)
-                contentHeight: resultCol.height
-                boundsBehavior: Flickable.StopAtBounds
-                interactive: root.results.length > 0
-                clip: true
-                visible: root.results.length > 0
-
-                Column {
-                    id: resultCol
-                    width: parent.width
-                    spacing: Math.round(2 * root.uiScale)
-                }
-            }
+        Text {
+            anchors.centerIn: parent
+            text: "No results"
+            color: root.colors.subtext0
+            font.pointSize: 9
+            visible: root.activeProvider && root.queryText && root.results.length === 0
         }
 
-        Item {
-            id: inputBar
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.bottom: parent.bottom
-            height: root.inputHeight
+        Flickable {
+            id: resultFlick
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
+            contentHeight: resultCol.height
+            boundsBehavior: Flickable.StopAtBounds
+            interactive: root.results.length > 0
+            clip: true
+            visible: root.results.length > 0
 
-            Rectangle {
-                anchors.fill: parent
-                anchors.margins: Math.round(4 * root.uiScale)
-                radius: Math.round(4 * root.uiScale)
-                color: "transparent"
-                border.width: 1
-                border.color: root.colors.border
-            }
-
-            Item {
-                id: inputArea
-                anchors.fill: parent
-                anchors.margins: Math.round(4 * root.uiScale)
-
-                TextInput {
-                    id: inputField
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.left: parent.left
-                    anchors.leftMargin: Math.round(12 * root.uiScale)
-                    anchors.right: parent.right
-                    anchors.rightMargin: Math.round(12 * root.uiScale)
-                    color: root.colors.text
-                    font.family: root.colors.fontFamily
-                    font.pointSize: 10
-                    clip: true
-                    cursorVisible: true
-                    cursorDelegate: Item {}
-
-                    onTextChanged: root.processInput(text)
-
-                    Keys.onPressed: function(event) {
-                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-                            root.selectCurrent()
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_Backspace && inputField.text === "") {
-                            root.close()
-                            event.accepted = true
-                        } else if ((event.key === Qt.Key_Tab || event.key === Qt.Key_Right) && root.activeProvider && root.results.length > 0) {
-                            if (event.key === Qt.Key_Right && inputField.cursorPosition < inputField.text.length) {
-                                return
-                            }
-                            var entry = root.results[root.currentIndex]
-                            inputField.text = root.activeProvider.prefix + root.activeProvider.textFor(entry)
-                            inputField.cursorPosition = inputField.text.length
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_Up) {
-                            if (root.results.length > 0) {
-                                root.moveSel(-1)
-                                event.accepted = true
-                            }
-                        } else if (event.key === Qt.Key_Down) {
-                            if (root.results.length > 0) {
-                                root.moveSel(1)
-                                event.accepted = true
-                            }
-                        } else if (event.key === Qt.Key_D && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
-                            var prov = root.activeProvider
-                            if (typeof prov.remove !== "function") { return }
-                            if (event.modifiers & Qt.ShiftModifier) {
-                                prov.removeAll()
-                            } else {
-                                prov.remove(root.results[root.currentIndex])
-                            }
-                            root.processInput(inputField.text)
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_P && (event.modifiers & Qt.ControlModifier) && root.activeProvider && root.results.length > 0) {
-                            var prov = root.activeProvider
-                            if (typeof prov.altActivate !== "function") { return }
-                            prov.altActivate(root.results[root.currentIndex])
-                            root.processInput(inputField.text)
-                            event.accepted = true
-                        } else if (event.key === Qt.Key_Escape) {
-                            if (root.activeProvider || root.results.length > 0 || inputField.text !== "") {
-                                root.activeProvider = null
-                                root.results = []
-                                root._pendingCleanup = false
-                                inputField.text = ""
-                                rebuildItems()
-                                updateTargetHeight()
-                            } else {
-                                close()
-                            }
-                            event.accepted = true
-                        }
-                    }
-                }
-
-                Rectangle {
-                    id: blockCursor
-                    property var cursorRect: inputField.positionToRectangle(inputField.cursorPosition)
-                    x: inputField.x + cursorRect.x
-                    y: inputField.y + (inputField.height - height) / 2
-                    width: Math.round(8 * root.uiScale)
-                    height: inputField.height
-                    radius: Math.round(1 * root.uiScale)
-                    color: root.colors.accent
-                    opacity: 0
-                    visible: inputField.activeFocus
-
-                    Timer {
-                        id: cursorBlinkTimer
-                        interval: 530
-                        running: inputField.activeFocus
-                        repeat: true
-                        onTriggered: parent.opacity = (parent.opacity > 0 ? 0 : 0.6)
-                    }
-
-                    Connections {
-                        target: inputField
-                        function onTextChanged() {
-                            cursorBlinkTimer.restart()
-                            blockCursor.opacity = 0.6
-                        }
-                        function onCursorPositionChanged() {
-                            cursorBlinkTimer.restart()
-                            blockCursor.opacity = 0.6
-                        }
-                        function onActiveFocusChanged() {
-                            if (inputField.activeFocus) {
-                                cursorBlinkTimer.restart()
-                                blockCursor.opacity = 0.6
-                            } else {
-                                cursorBlinkTimer.stop()
-                                blockCursor.opacity = 0
-                            }
-                        }
-                    }
-                }
-            }
-
-            Text {
-                id: providerLabel
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                anchors.rightMargin: Math.round(12 * root.uiScale)
-                text: root.activeProvider ? root.activeProvider.name : ""
-                color: root.colors.subtext0
-                font.pointSize: 8
-                visible: text !== ""
+            Column {
+                id: resultCol
+                width: parent.width
+                spacing: Math.round(2 * root.uiScale)
             }
         }
     }
