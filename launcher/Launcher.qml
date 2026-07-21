@@ -21,7 +21,7 @@ PanelWindow {
     property bool _isClosing: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
-    property real inputSlideOffset: Math.round(20 * root.uiScale)
+    property real inputSlideOffset: Math.round(8 * root.uiScale)
     property real inputSlideY: 0
 
     // Settings drives which providers are active. Keys must match
