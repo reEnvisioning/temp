@@ -250,12 +250,11 @@ PanelWindow {
         height: root.inputHeight
 
         Rectangle {
-            anchors.fill: parent
-            anchors.margins: Math.round(4 * root.uiScale)
-            radius: Math.round(4 * root.uiScale)
-            color: "transparent"
-            border.width: 1
-            border.color: root.colors.border
+            anchors.centerIn: parent
+            width: root.panelWidth + root.resultWidthOffset
+            height: root.inputHeight + 2 * root.resultWidthOffset
+            radius: Math.round(6 * root.uiScale)
+            color: root.colors.background
         }
 
         Item {
