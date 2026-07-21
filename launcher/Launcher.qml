@@ -252,6 +252,7 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             anchors.margins: Math.round(4 * root.uiScale)
+            anchors.topMargin: 0
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
         }
@@ -409,6 +410,7 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             anchors.margins: Math.round(4 * root.uiScale)
+            anchors.bottomMargin: 0
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
 
