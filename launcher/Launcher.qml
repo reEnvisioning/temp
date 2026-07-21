@@ -252,7 +252,6 @@ PanelWindow {
         Rectangle {
             anchors.fill: parent
             anchors.margins: Math.round(4 * root.uiScale)
-            anchors.topMargin: 0
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
         }
@@ -402,6 +401,7 @@ PanelWindow {
     Item {
         id: resultArea
         anchors.bottom: inputBar.top
+        anchors.bottomMargin: -Math.round(4 * root.uiScale)
         anchors.horizontalCenter: inputBar.horizontalCenter
         width: root.panelWidth + root.resultWidthOffset
         height: root.resultHeight
