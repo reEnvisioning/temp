@@ -21,6 +21,8 @@ PanelWindow {
     property bool _isClosing: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
+    property real inputSlideOffset: Math.round(20 * root.uiScale)
+    property real inputSlideY: 0
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
@@ -51,20 +53,22 @@ PanelWindow {
     Anim { id: resultExpandAnim; target: root; property: "resultAnimHeight"; type: Anim.SpatialDefault }
     Anim { id: resultCloseAnim; target: root; property: "resultAnimHeight"; type: Anim.EffectsFast }
     Anim { id: inputOpacityAnim; target: root; property: "inputAnimOpacity"; type: Anim.SpatialDefault }
+    Anim { id: inputSlideAnim; target: root; property: "inputSlideY"; type: Anim.SpatialDefault }
 
     Connections {
         target: resultCloseAnim
         function onFinished() {
             if (root._isClosing) {
-                inputOpacityAnim.from = root.inputAnimOpacity
-                inputOpacityAnim.to = 0
-                inputOpacityAnim.start()
+                inputSlideAnim.type = Anim.EffectsFast
+                inputSlideAnim.from = 0
+                inputSlideAnim.to = root.inputSlideOffset
+                inputSlideAnim.start()
             }
         }
     }
 
     Connections {
-        target: inputOpacityAnim
+        target: inputSlideAnim
         function onFinished() {
             if (root._isClosing) {
                 root._isClosing = false
@@ -114,7 +118,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth + root.resultWidthOffset
-    implicitHeight: root.inputHeight + Math.round(root.screen.height / 3) + Math.round(13 * root.uiScale)
+    implicitHeight: root.inputHeight + Math.round(root.screen.height / 3) + Math.round(13 * root.uiScale) + root.inputSlideOffset
     visible: root.isOpen
     color: "transparent"
     focusable: true
@@ -179,10 +183,16 @@ PanelWindow {
         resultExpandAnim.stop()
         resultCloseAnim.stop()
         inputOpacityAnim.stop()
+        inputSlideAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
         root.inputAnimOpacity = 1
+        root.inputSlideY = root.inputSlideOffset
         resetState()
+        inputSlideAnim.type = Anim.SpatialDefault
+        inputSlideAnim.from = root.inputSlideY
+        inputSlideAnim.to = 0
+        inputSlideAnim.start()
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
 
@@ -191,11 +201,17 @@ PanelWindow {
         resultExpandAnim.stop()
         resultCloseAnim.stop()
         inputOpacityAnim.stop()
+        inputSlideAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
         root.inputAnimOpacity = 1
+        root.inputSlideY = root.inputSlideOffset
         resetState()
         inputField.text = pre
+        inputSlideAnim.type = Anim.SpatialDefault
+        inputSlideAnim.from = root.inputSlideY
+        inputSlideAnim.to = 0
+        inputSlideAnim.start()
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
 
@@ -203,6 +219,7 @@ PanelWindow {
         root._isClosing = true
         resultExpandAnim.stop()
         resultCloseAnim.stop()
+        inputSlideAnim.stop()
         resultCloseAnim.from = root.resultAnimHeight
         resultCloseAnim.to = 0
         resultCloseAnim.start()
@@ -212,6 +229,7 @@ PanelWindow {
         resultExpandAnim.stop()
         resultCloseAnim.stop()
         inputOpacityAnim.stop()
+        inputSlideAnim.stop()
         root._isClosing = false
         root.activeProvider = null
         root.queryText = ""
@@ -338,8 +356,8 @@ PanelWindow {
 
     Item {
         id: inputBar
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
+        x: (parent.width - width) / 2
+        y: parent.height - height - root.inputSlideOffset + root.inputSlideY
         width: root.panelWidth + root.resultWidthOffset
         height: root.inputHeight
         opacity: root.inputAnimOpacity
