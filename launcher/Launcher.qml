@@ -82,7 +82,7 @@ PanelWindow {
     property int currentIndex: 0
 
     implicitWidth: root.panelWidth + root.resultWidthOffset
-    implicitHeight: root.inputHeight + root.resultHeight + 2 * root.resultWidthOffset
+    implicitHeight: root.inputHeight + Math.round(root.screen.height / 3) + Math.round(13 * root.uiScale)
     visible: root.isOpen
     color: "transparent"
     focusable: true
@@ -246,13 +246,12 @@ PanelWindow {
         id: inputBar
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
-        width: root.panelWidth
+        width: root.panelWidth + root.resultWidthOffset
         height: root.inputHeight
 
         Rectangle {
-            anchors.centerIn: parent
-            width: root.panelWidth + root.resultWidthOffset
-            height: root.inputHeight + 2 * root.resultWidthOffset
+            anchors.fill: parent
+            anchors.margins: Math.round(4 * root.uiScale)
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
         }
