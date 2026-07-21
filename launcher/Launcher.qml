@@ -48,11 +48,12 @@ PanelWindow {
     Component { id: calcProvCmp; CalcProvider {} }
     Component { id: clipProvCmp; ClipProvider {} }
 
-    Anim { id: resultHeightAnim; target: root; property: "resultAnimHeight"; type: Anim.SpatialDefault }
+    Anim { id: resultExpandAnim; target: root; property: "resultAnimHeight"; type: Anim.SpatialDefault }
+    Anim { id: resultCloseAnim; target: root; property: "resultAnimHeight"; type: Anim.EffectsFast }
     Anim { id: inputOpacityAnim; target: root; property: "inputAnimOpacity"; type: Anim.SpatialDefault }
 
     Connections {
-        target: resultHeightAnim
+        target: resultCloseAnim
         function onFinished() {
             if (root._isClosing) {
                 inputOpacityAnim.from = root.inputAnimOpacity
@@ -175,7 +176,8 @@ PanelWindow {
 
     function open() {
         root._isClosing = false
-        resultHeightAnim.stop()
+        resultExpandAnim.stop()
+        resultCloseAnim.stop()
         inputOpacityAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
@@ -186,7 +188,8 @@ PanelWindow {
 
     function openWithPrefix(pre) {
         root._isClosing = false
-        resultHeightAnim.stop()
+        resultExpandAnim.stop()
+        resultCloseAnim.stop()
         inputOpacityAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
@@ -198,15 +201,16 @@ PanelWindow {
 
     function close() {
         root._isClosing = true
-        resultHeightAnim.stop()
-        inputOpacityAnim.stop()
-        resultHeightAnim.from = root.resultAnimHeight
-        resultHeightAnim.to = 0
-        resultHeightAnim.start()
+        resultExpandAnim.stop()
+        resultCloseAnim.stop()
+        resultCloseAnim.from = root.resultAnimHeight
+        resultCloseAnim.to = 0
+        resultCloseAnim.start()
     }
 
     function resetState() {
-        resultHeightAnim.stop()
+        resultExpandAnim.stop()
+        resultCloseAnim.stop()
         inputOpacityAnim.stop()
         root._isClosing = false
         root.activeProvider = null
@@ -248,7 +252,11 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        root.resultAnimHeight = root.computeListHeight()
+        var target = root.computeListHeight()
+        resultCloseAnim.stop()
+        resultExpandAnim.from = root.resultAnimHeight
+        resultExpandAnim.to = target
+        resultExpandAnim.start()
     }
 
     function selectCurrent() {
