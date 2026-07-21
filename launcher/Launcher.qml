@@ -19,6 +19,7 @@ PanelWindow {
     property bool isOpen: false
     property bool _pendingCleanup: false
     property bool _isClosing: false
+    property bool _queryChanged: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
     property real inputSlideOffset: Math.round(8 * root.uiScale)
@@ -55,6 +56,15 @@ PanelWindow {
     Anim { id: inputOpacityAnim; target: root; property: "inputAnimOpacity"; type: Anim.SpatialDefault }
     Anim { id: inputSlideAnim; target: root; property: "inputSlideY"; type: Anim.SpatialDefault }
 
+    NumberAnimation {
+        id: highlightSlide
+        target: highlight
+        property: "y"
+        duration: 200
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: [0.34, 0.8, 0.34, 1, 1, 1]
+    }
+
     Connections {
         target: resultCloseAnim
         function onFinished() {
@@ -75,6 +85,7 @@ PanelWindow {
                 root.isOpen = false
                 root.activeProvider = null
                 root.results = []
+                root._queryChanged = true
                 root.currentIndex = 0
                 root._pendingCleanup = false
                 rebuildItems()
@@ -234,6 +245,7 @@ PanelWindow {
         root.activeProvider = null
         root.queryText = ""
         root.results = []
+        root._queryChanged = true
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
@@ -248,11 +260,13 @@ PanelWindow {
             if (text.length >= plen && text.substring(0, plen) === p.prefix) {
                 if (root.activeProvider !== p) {
                     root.activeProvider = p
+                    root._queryChanged = true
                     root.currentIndex = 0
                     if (root._wp) root._wp._browsingMode = false
                 }
                 root.queryText = text.substring(plen)
                 root.results = p.query(root.queryText)
+                root._queryChanged = true
                 if (root.currentIndex >= root.results.length)
                     root.currentIndex = Math.max(0, root.results.length - 1)
                 root._pendingCleanup = false
@@ -265,6 +279,7 @@ PanelWindow {
         if (root.activeProvider !== null || root.results.length > 0) {
             root.activeProvider = null
             root.results = []
+            root._queryChanged = true
             root.currentIndex = 0
             root._pendingCleanup = false
             rebuildItems()
@@ -366,11 +381,6 @@ PanelWindow {
                 color: root.colors.highlighted
                 opacity: 0.12
                 visible: root.results.length > 0
-
-                Behavior on y {
-                    id: highlightBehavior
-                    Anim { type: Anim.EffectsDefault }
-                }
             }
         }
     }
@@ -548,9 +558,8 @@ PanelWindow {
         }
 
         highlight.visible = true
-        highlightBehavior.enabled = false
         highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
-        highlightBehavior.enabled = true
+        root._queryChanged = false
 
         var comp = root.activeProvider.itemComponent
         if (!comp) return
@@ -569,7 +578,17 @@ PanelWindow {
     }
 
     onCurrentIndexChanged: {
-        highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
+        var targetY = root.currentIndex * (highlight.itemH + highlight.colSpacing)
+        if (root._queryChanged) {
+            root._queryChanged = false
+            highlightSlide.stop()
+            highlight.y = targetY
+        } else {
+            highlightSlide.stop()
+            highlightSlide.from = highlight.y
+            highlightSlide.to = targetY
+            highlightSlide.start()
+        }
         ensureVisible()
     }
 
