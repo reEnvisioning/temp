@@ -127,7 +127,7 @@ PanelWindow {
     WlrLayershell.namespace: "launcher"
     anchors.bottom: true
     margins {
-        bottom: Math.round(8 * root.uiScale)
+        bottom: 0
         left: Math.round((root.screen.width - (root.panelWidth + root.resultWidthOffset)) / 2)
         right: Math.round((root.screen.width - (root.panelWidth + root.resultWidthOffset)) / 2)
     }
