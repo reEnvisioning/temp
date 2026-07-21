@@ -18,11 +18,7 @@ PanelWindow {
     property real fullHeight: Math.round(500 * root.uiScale)
     property bool isOpen: false
     property real animHeight: 0
-    property real widthScaleAnim: 1.0
-    property real contentOpacity: 0
-    property real glowAlpha: 0
     property bool _pendingCleanup: false
-    property var _pendingActivate: null
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
@@ -87,7 +83,7 @@ PanelWindow {
 
     implicitWidth: root.panelWidth
     implicitHeight: root.fullHeight
-    visible: root.animHeight > 0
+    visible: root.isOpen
     color: "transparent"
     focusable: true
     WlrLayershell.layer: WlrLayer.Overlay
@@ -99,66 +95,6 @@ PanelWindow {
         left: Math.round((root.screen.width - root.panelWidth) / 2)
         right: Math.round((root.screen.width - root.panelWidth) / 2)
     }
-
-    Anim { id: heightAnim; target: root; property: "animHeight"; type: Anim.SpatialDefault }
-    Anim { id: widthAnim; target: root; property: "widthScaleAnim"; type: Anim.SpatialDefault }
-    Anim { id: contentFadeAnim; target: root; property: "contentOpacity"; type: Anim.EffectsDefault }
-    Anim { id: glowAnim; target: root; property: "glowAlpha"; type: Anim.EffectsDefault }
-
-    Connections {
-        target: heightAnim
-        function onFinished() {
-            if (root._pendingActivate) {
-                var pending = root._pendingActivate
-                root._pendingActivate = null
-                pending.provider.activate(pending.entry)
-            }
-        }
-    }
-
-    function animateTo(h, type) {
-        if (h === heightAnim.to && heightAnim.running) return
-        heightAnim.stop()
-        heightAnim.from = root.animHeight
-        heightAnim.to = h
-        heightAnim.type = type
-        heightAnim.start()
-    }
-
-    function animateWidthTo(from, to, type) {
-        widthAnim.stop()
-        widthAnim.from = from
-        widthAnim.to = to
-        widthAnim.type = type
-        widthAnim.start()
-    }
-
-    function animateGlowTo(to, type) {
-        glowAnim.stop()
-        glowAnim.from = root.glowAlpha
-        glowAnim.to = to
-        glowAnim.type = type
-        glowAnim.start()
-    }
-
-    function animateContentTo(to, type, delay) {
-        contentFadeAnim.stop()
-        contentFadeAnim.from = root.contentOpacity
-        contentFadeAnim.to = to
-        contentFadeAnim.type = type
-        if (delay > 0) {
-            restartTimer.interval = delay
-            restartTimer.triggered.connect(function() {
-                contentFadeAnim.start()
-                restartTimer.triggered.disconnect(arguments.callee)
-            })
-            restartTimer.start()
-        } else {
-            contentFadeAnim.start()
-        }
-    }
-
-    Timer { id: restartTimer }
 
     function computeMaxListHeight() {
         return Math.round(root.screen.height / 3) - root.inputHeight - Math.round(13 * root.uiScale)
@@ -227,27 +163,18 @@ PanelWindow {
         root.results = []
         root.currentIndex = 0
         root._pendingCleanup = false
+        root.animHeight = 0
         rebuildItems()
-        animateTo(0, Anim.StandardAccel)
-        animateWidthTo(root.widthScaleAnim, 1.0, Anim.StandardAccel)
-        animateGlowTo(0, Anim.EffectsFast)
-        animateContentTo(0, Anim.EffectsFast, 0)
     }
 
     function resetState() {
-        root._pendingActivate = null
-        root._pendingCleanup = false
         root.activeProvider = null
         root.queryText = ""
         root.results = []
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        var targetH = root.inputHeight + root.computeListHeight()
-        animateTo(targetH, Anim.SpatialDefault)
-        animateWidthTo(0.92, 1.0, Anim.SpatialDefault)
-        animateGlowTo(1, Anim.EffectsDefault)
-        animateContentTo(1, Anim.EffectsSlow, 300)
+        root.animHeight = root.inputHeight + root.computeListHeight()
     }
 
     function processInput(text) {
@@ -280,20 +207,17 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        var h = root.inputHeight + root.computeListHeight()
-        if (h === root.animHeight) return
-        animateTo(h, Anim.EmphasizedDecel)
+        root.animHeight = root.inputHeight + root.computeListHeight()
     }
 
     function selectCurrent() {
-        root._pendingActivate = null
         if (root.activeProvider && root.currentIndex >= 0 && root.currentIndex < root.results.length) {
             var provider = root.activeProvider
             var entry = root.results[root.currentIndex]
 
             if (provider.closeOnActivate !== false) {
-                root._pendingActivate = { provider: provider, entry: entry }
                 close()
+                provider.activate(entry)
             } else {
                 provider.activate(entry)
                 inputField.text = provider.prefix
@@ -326,25 +250,9 @@ PanelWindow {
         clip: true
 
         Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottom: parent.bottom
-            width: parent.width * (1.2 + root.glowAlpha * 0.3)
-            height: parent.height * 1.2
-            radius: width * 0.5
-            color: Qt.rgba(1, 1, 1, 0.03 * root.glowAlpha)
-            visible: root.glowAlpha > 0.01
-        }
-
-        Rectangle {
             anchors.fill: parent
             radius: Math.round(6 * root.uiScale)
             color: root.colors.background
-
-            transform: Scale {
-                origin.y: contentWrapper.height
-                origin.x: root.panelWidth / 2
-                xScale: root.widthScaleAnim
-            }
 
             Behavior on color { CAnim {} }
         }
@@ -358,7 +266,6 @@ PanelWindow {
             anchors.bottom: inputBar.top
             anchors.bottomMargin: Math.round(1 * root.uiScale)
             clip: true
-            opacity: root.contentOpacity
 
             Text {
                 anchors.centerIn: parent
@@ -392,7 +299,6 @@ PanelWindow {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: root.inputHeight
-            opacity: root.contentOpacity
 
             Rectangle {
                 anchors.fill: parent
