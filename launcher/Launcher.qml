@@ -15,10 +15,12 @@ PanelWindow {
     property real inputHeight: Math.round(40 * root.uiScale)
     property real itemHeight: Math.round(44 * root.uiScale)
     property real emptyListHeight: Math.round(44 * root.uiScale)
-    property real resultHeight: 0
     property real resultWidthOffset: Math.round(8 * root.uiScale)
     property bool isOpen: false
     property bool _pendingCleanup: false
+    property bool _isClosing: false
+    property real resultAnimHeight: 0
+    property real inputAnimOpacity: 1
 
     // Settings drives which providers are active. Keys must match
     // settings.launcherProviders (app, shell, terminal, ssh, theme,
@@ -45,6 +47,35 @@ PanelWindow {
     Component { id: emojiProvCmp; EmojiProvider {} }
     Component { id: calcProvCmp; CalcProvider {} }
     Component { id: clipProvCmp; ClipProvider {} }
+
+    Anim { id: resultHeightAnim; target: root; property: "resultAnimHeight"; type: Anim.SpatialDefault }
+    Anim { id: inputOpacityAnim; target: root; property: "inputAnimOpacity"; type: Anim.SpatialDefault }
+
+    Connections {
+        target: resultHeightAnim
+        function onFinished() {
+            if (root._isClosing) {
+                inputOpacityAnim.from = root.inputAnimOpacity
+                inputOpacityAnim.to = 0
+                inputOpacityAnim.start()
+            }
+        }
+    }
+
+    Connections {
+        target: inputOpacityAnim
+        function onFinished() {
+            if (root._isClosing) {
+                root._isClosing = false
+                root.isOpen = false
+                root.activeProvider = null
+                root.results = []
+                root.currentIndex = 0
+                root._pendingCleanup = false
+                rebuildItems()
+            }
+        }
+    }
 
     Connections {
         target: root._wp
@@ -143,38 +174,48 @@ PanelWindow {
     }
 
     function open() {
+        root._isClosing = false
+        resultHeightAnim.stop()
+        inputOpacityAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
+        root.inputAnimOpacity = 1
         resetState()
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
 
     function openWithPrefix(pre) {
+        root._isClosing = false
+        resultHeightAnim.stop()
+        inputOpacityAnim.stop()
         if (!root.isOpen)
             root.isOpen = true
+        root.inputAnimOpacity = 1
         resetState()
         inputField.text = pre
         Qt.callLater(function() { inputField.forceActiveFocus() })
     }
 
     function close() {
-        root.isOpen = false
-        root.activeProvider = null
-        root.results = []
-        root.currentIndex = 0
-        root._pendingCleanup = false
-        root.resultHeight = 0
-        rebuildItems()
+        root._isClosing = true
+        resultHeightAnim.stop()
+        inputOpacityAnim.stop()
+        resultHeightAnim.from = root.resultAnimHeight
+        resultHeightAnim.to = 0
+        resultHeightAnim.start()
     }
 
     function resetState() {
+        resultHeightAnim.stop()
+        inputOpacityAnim.stop()
+        root._isClosing = false
         root.activeProvider = null
         root.queryText = ""
         root.results = []
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
-        root.resultHeight = root.computeListHeight()
+        root.resultAnimHeight = root.computeListHeight()
     }
 
     function processInput(text) {
@@ -207,7 +248,7 @@ PanelWindow {
     }
 
     function updateTargetHeight() {
-        root.resultHeight = root.computeListHeight()
+        root.resultAnimHeight = root.computeListHeight()
     }
 
     function selectCurrent() {
@@ -248,7 +289,7 @@ PanelWindow {
         anchors.bottomMargin: -Math.round(6 * root.uiScale)
         anchors.horizontalCenter: inputBar.horizontalCenter
         width: root.panelWidth + root.resultWidthOffset
-        height: root.resultHeight
+        height: root.resultAnimHeight
         clip: true
 
         Rectangle {
@@ -293,6 +334,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         width: root.panelWidth + root.resultWidthOffset
         height: root.inputHeight
+        opacity: root.inputAnimOpacity
 
         Rectangle {
             anchors.fill: parent
