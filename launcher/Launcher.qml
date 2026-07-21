@@ -19,7 +19,6 @@ PanelWindow {
     property bool isOpen: false
     property bool _pendingCleanup: false
     property bool _isClosing: false
-    property bool _queryChanged: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
     property real inputSlideOffset: Math.round(8 * root.uiScale)
@@ -56,15 +55,6 @@ PanelWindow {
     Anim { id: inputOpacityAnim; target: root; property: "inputAnimOpacity"; type: Anim.SpatialDefault }
     Anim { id: inputSlideAnim; target: root; property: "inputSlideY"; type: Anim.SpatialDefault }
 
-    NumberAnimation {
-        id: highlightSlide
-        target: highlight
-        property: "y"
-        duration: 200
-        easing.type: Easing.BezierSpline
-        easing.bezierCurve: [0.34, 0.8, 0.34, 1, 1, 1]
-    }
-
     Connections {
         target: resultCloseAnim
         function onFinished() {
@@ -85,7 +75,6 @@ PanelWindow {
                 root.isOpen = false
                 root.activeProvider = null
                 root.results = []
-                root._queryChanged = true
                 root.currentIndex = 0
                 root._pendingCleanup = false
                 rebuildItems()
@@ -245,7 +234,6 @@ PanelWindow {
         root.activeProvider = null
         root.queryText = ""
         root.results = []
-        root._queryChanged = true
         root.currentIndex = 0
         inputField.text = ""
         rebuildItems()
@@ -260,15 +248,11 @@ PanelWindow {
             if (text.length >= plen && text.substring(0, plen) === p.prefix) {
                 if (root.activeProvider !== p) {
                     root.activeProvider = p
-                    root._queryChanged = true
                     root.currentIndex = 0
                     if (root._wp) root._wp._browsingMode = false
                 }
                 root.queryText = text.substring(plen)
                 root.results = p.query(root.queryText)
-                root._queryChanged = true
-                if (root.currentIndex >= root.results.length)
-                    root.currentIndex = Math.max(0, root.results.length - 1)
                 root._pendingCleanup = false
                 rebuildItems()
                 updateTargetHeight()
@@ -279,8 +263,6 @@ PanelWindow {
         if (root.activeProvider !== null || root.results.length > 0) {
             root.activeProvider = null
             root.results = []
-            root._queryChanged = true
-            root.currentIndex = 0
             root._pendingCleanup = false
             rebuildItems()
             updateTargetHeight()
@@ -368,19 +350,6 @@ PanelWindow {
                 id: resultCol
                 width: parent.width
                 spacing: Math.round(2 * root.uiScale)
-            }
-
-            Rectangle {
-                id: highlight
-                property real itemH: root.itemHeight
-                property real colSpacing: root.results.length > 1 ? Math.round(2 * root.uiScale) : 0
-                y: 0
-                width: resultCol.width
-                height: itemH
-                radius: Math.round(6 * root.uiScale)
-                color: root.colors.highlighted
-                opacity: 0.12
-                visible: root.results.length > 0
             }
         }
     }
@@ -552,14 +521,7 @@ PanelWindow {
         for (var i = children.length - 1; i >= 0; i--)
             children[i].destroy()
 
-        if (!root.activeProvider || root.results.length === 0) {
-            highlight.visible = false
-            return
-        }
-
-        highlight.visible = true
-        highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
-        root._queryChanged = false
+        if (!root.activeProvider || root.results.length === 0) return
 
         var comp = root.activeProvider.itemComponent
         if (!comp) return
@@ -578,16 +540,10 @@ PanelWindow {
     }
 
     onCurrentIndexChanged: {
-        var targetY = root.currentIndex * (highlight.itemH + highlight.colSpacing)
-        if (root._queryChanged) {
-            root._queryChanged = false
-            highlightSlide.stop()
-            highlight.y = targetY
-        } else {
-            highlightSlide.stop()
-            highlightSlide.from = highlight.y
-            highlightSlide.to = targetY
-            highlightSlide.start()
+        for (var i = 0; i < resultCol.children.length; i++) {
+            var child = resultCol.children[i]
+            if (child && child.hasOwnProperty("selected"))
+                child.selected = (i === root.currentIndex)
         }
         ensureVisible()
     }
