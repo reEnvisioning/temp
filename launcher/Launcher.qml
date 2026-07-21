@@ -19,6 +19,7 @@ PanelWindow {
     property bool isOpen: false
     property bool _pendingCleanup: false
     property bool _isClosing: false
+    property bool _skipNextHighlightAnim: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
     property real inputSlideOffset: Math.round(8 * root.uiScale)
@@ -295,6 +296,7 @@ PanelWindow {
     function moveSel(delta) {
         var len = root.results.length
         if (len === 0) return
+        root._skipNextHighlightAnim = true
         root.currentIndex = (root.currentIndex + delta + len) % len
         ensureVisible()
     }
@@ -350,6 +352,26 @@ PanelWindow {
                 id: resultCol
                 width: parent.width
                 spacing: Math.round(2 * root.uiScale)
+            }
+
+            Rectangle {
+                id: highlight
+                property real itemH: root.itemHeight
+                property real colSpacing: root.results.length > 1 ? Math.round(2 * root.uiScale) : 0
+                y: root.currentIndex * (itemH + colSpacing)
+                width: resultCol.width
+                height: itemH
+                radius: Math.round(6 * root.uiScale)
+                color: root.colors.highlighted
+                opacity: 0.12
+                visible: root.results.length > 0
+
+                Behavior on y {
+                    id: highlightBehavior
+                    Anim { type: Anim.EffectsDefault }
+                }
+
+                Component.onCompleted: y = root.currentIndex * (itemH + colSpacing)
             }
         }
     }
@@ -521,7 +543,15 @@ PanelWindow {
         for (var i = children.length - 1; i >= 0; i--)
             children[i].destroy()
 
-        if (!root.activeProvider || root.results.length === 0) return
+        if (!root.activeProvider || root.results.length === 0) {
+            highlight.visible = false
+            return
+        }
+
+        highlight.visible = true
+        highlightBehavior.enabled = false
+        highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
+        highlightBehavior.enabled = true
 
         var comp = root.activeProvider.itemComponent
         if (!comp) return
@@ -540,10 +570,11 @@ PanelWindow {
     }
 
     onCurrentIndexChanged: {
-        for (var i = 0; i < resultCol.children.length; i++) {
-            var child = resultCol.children[i]
-            if (child && child.hasOwnProperty("selected"))
-                child.selected = (i === root.currentIndex)
+        if (root._skipNextHighlightAnim) {
+            root._skipNextHighlightAnim = false
+            highlightBehavior.enabled = false
+            highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
+            highlightBehavior.enabled = true
         }
         ensureVisible()
     }

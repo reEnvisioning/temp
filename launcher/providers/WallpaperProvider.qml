@@ -348,12 +348,6 @@ Item {
                 }
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: selected ? colors.highlighted : "transparent"
-                radius: Math.round(6 * uiScale)
-            }
-
             Row {
                 visible: modelData && modelData.isFileSearch !== true
                 anchors.left: parent.left

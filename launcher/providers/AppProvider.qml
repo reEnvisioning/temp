@@ -169,12 +169,6 @@ Item {
                 }
             }
 
-            Rectangle {
-                anchors.fill: parent
-                color: selected ? colors.highlighted : "transparent"
-                radius: Math.round(6 * uiScale)
-            }
-
             Row {
                 anchors.left: parent.left
                 anchors.right: parent.right
