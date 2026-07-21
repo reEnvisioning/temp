@@ -401,7 +401,7 @@ PanelWindow {
     Item {
         id: resultArea
         anchors.bottom: inputBar.top
-        anchors.bottomMargin: -Math.round(4 * root.uiScale)
+        anchors.bottomMargin: -Math.round(8 * root.uiScale)
         anchors.horizontalCenter: inputBar.horizontalCenter
         width: root.panelWidth + root.resultWidthOffset
         height: root.resultHeight
