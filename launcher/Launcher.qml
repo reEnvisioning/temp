@@ -19,7 +19,6 @@ PanelWindow {
     property bool isOpen: false
     property bool _pendingCleanup: false
     property bool _isClosing: false
-    property bool _skipNextHighlightAnim: false
     property real resultAnimHeight: 0
     property real inputAnimOpacity: 1
     property real inputSlideOffset: Math.round(8 * root.uiScale)
@@ -254,6 +253,8 @@ PanelWindow {
                 }
                 root.queryText = text.substring(plen)
                 root.results = p.query(root.queryText)
+                if (root.currentIndex >= root.results.length)
+                    root.currentIndex = Math.max(0, root.results.length - 1)
                 root._pendingCleanup = false
                 rebuildItems()
                 updateTargetHeight()
@@ -264,6 +265,7 @@ PanelWindow {
         if (root.activeProvider !== null || root.results.length > 0) {
             root.activeProvider = null
             root.results = []
+            root.currentIndex = 0
             root._pendingCleanup = false
             rebuildItems()
             updateTargetHeight()
@@ -296,7 +298,6 @@ PanelWindow {
     function moveSel(delta) {
         var len = root.results.length
         if (len === 0) return
-        root._skipNextHighlightAnim = true
         root.currentIndex = (root.currentIndex + delta + len) % len
         ensureVisible()
     }
@@ -358,7 +359,7 @@ PanelWindow {
                 id: highlight
                 property real itemH: root.itemHeight
                 property real colSpacing: root.results.length > 1 ? Math.round(2 * root.uiScale) : 0
-                y: root.currentIndex * (itemH + colSpacing)
+                y: 0
                 width: resultCol.width
                 height: itemH
                 radius: Math.round(6 * root.uiScale)
@@ -370,8 +371,6 @@ PanelWindow {
                     id: highlightBehavior
                     Anim { type: Anim.EffectsDefault }
                 }
-
-                Component.onCompleted: y = root.currentIndex * (itemH + colSpacing)
             }
         }
     }
@@ -570,12 +569,7 @@ PanelWindow {
     }
 
     onCurrentIndexChanged: {
-        if (root._skipNextHighlightAnim) {
-            root._skipNextHighlightAnim = false
-            highlightBehavior.enabled = false
-            highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
-            highlightBehavior.enabled = true
-        }
+        highlight.y = root.currentIndex * (highlight.itemH + highlight.colSpacing)
         ensureVisible()
     }
 
